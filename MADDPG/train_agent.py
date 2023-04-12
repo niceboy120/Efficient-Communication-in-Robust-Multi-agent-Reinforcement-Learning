@@ -38,6 +38,7 @@ class Train:
         self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
         
+        
     def loop(self):
         total_steps = 0
         score_history = []
