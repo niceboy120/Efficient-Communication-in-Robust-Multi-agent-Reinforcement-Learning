@@ -5,7 +5,6 @@ import time
 """
 Parameters MADDPG agents:
 """
-
 MODE = 'train' #pick "train" or "test"
 LOAD = True
 SAVE = True
@@ -19,6 +18,18 @@ try:
     train_agents.loop()
 except KeyboardInterrupt:
     train_agents.ask_save()
+
+                
+
+
+
+
+
+
+
+
+
+
 
                 
 """

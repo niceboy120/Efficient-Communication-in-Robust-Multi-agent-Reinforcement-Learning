@@ -95,6 +95,7 @@ class Train:
                 print('episode', i, 'average score {:.1f}'.format(avg_score))
 
         print("Final best score: ", best_score)
+        self.ask_save()
 
 
     def ask_save(self):
