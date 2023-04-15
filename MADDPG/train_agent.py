@@ -3,9 +3,12 @@ from MADDPG.maddpg import MADDPG
 from MADDPG.buffer import MultiAgentReplayBuffer
 from make_env import make_env
 import time
+from utils import obs_list_to_state_vector
+
+## IMORT EDI THINGS
 
 class Train:
-    def __init__(self, mode='train', load=False, save=True, print_interval=500, N_games=50000, max_steps=50):
+    def __init__(self, mode='train', edi_mode=False, load=False, save=True, print_interval=500, N_games=50000, max_steps=50):
         self.mode = mode
         if self.mode=='test':
             self.load = True
@@ -15,6 +18,7 @@ class Train:
             self.save = save
         else:
             raise Exception("Wrong mode selected, please choose test or train")
+        self.edi_mode = edi_mode
     
         self.print_interval = print_interval
         self.N_games = N_games
@@ -38,6 +42,8 @@ class Train:
         self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
         
+        ## INitialize edi things
+        
         
     def loop(self):
         total_steps = 0
@@ -58,12 +64,14 @@ class Train:
                     self.env.render()
                     time.sleep(0.1)
                     actions = self.maddpg_agents.eval_choose_action(obs)
+                    # Somewhere build in observation memory based on communication... and on wheter edi_mode is True..
+                    
                 else:
                     actions = self.maddpg_agents.choose_action(obs)
                 obs_, reward, done, info = self.env.step(actions)
 
-                state = self.obs_list_to_state_vector(obs)
-                state_ = self.obs_list_to_state_vector(obs_)
+                state = obs_list_to_state_vector(obs)
+                state_ = obs_list_to_state_vector(obs_)
 
                 if episode_step >= self.max_steps:
                     done = [True]*self.n_agents
@@ -117,9 +125,9 @@ class Train:
         self.maddpg_agents.save_checkpoint()
 
 
-    @staticmethod
-    def obs_list_to_state_vector(observation):
-        state = np.array([])
-        for obs in observation:
-            state = np.concatenate([state, obs])
-        return state
+    # @staticmethod
+    # def obs_list_to_state_vector(observation):
+    #     state = np.array([])
+    #     for obs in observation:
+    #         state = np.concatenate([state, obs])
+    #     return state

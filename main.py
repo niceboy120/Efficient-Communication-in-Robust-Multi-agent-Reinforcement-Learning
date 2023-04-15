@@ -11,9 +11,9 @@ TRAIN_OR_TEST = True
 """
 Parameters MADDPG agents:
 """
-MODE = 'train' #pick "train" or "test"
+MADDPG_MODE = 'train' #pick "train" or "test"
 LOAD = True
-SAVE = True
+SAVE = False
 PRINT_INTERVAL = 500
 # N_GAMES = 10000
 # MAX_STEPS = 50
@@ -23,8 +23,7 @@ PRINT_INTERVAL = 500
 """
 Parameters robustness surrogates
 """
-TRAIN_SVR = False
-
+EDI_MODE = True
 
 
 """
@@ -37,7 +36,7 @@ LRRL = False
 
 if __name__ == '__main__':
     if TRAIN_OR_TEST:
-        train_agents = Train(MODE, LOAD, SAVE)
+        train_agents = Train(MADDPG_MODE, EDI_MODE, LOAD, SAVE)
 
         try:
             train_agents.loop()
