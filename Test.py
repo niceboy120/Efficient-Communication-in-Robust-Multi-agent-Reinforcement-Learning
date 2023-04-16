@@ -30,49 +30,81 @@ maddpg_agents = MADDPG(actor_dims, critic_dims, n_agents, n_actions,
 
 
 maddpg_agents.load_checkpoint()
-obs = env.reset()
-sequence = [obs]
+# obs = env.reset()
+# sequence = [obs]
 
-for i in range(2):
-    # env.render()
+# for i in range(2):
+#     # env.render()
 
-    print("obs: \n", obs)
+#     print("obs: \n", obs)
 
  
     
-    actions = []
-    actions_env = []
+#     actions = []
+#     actions_env = []
 
-    for agent_idx, agent in enumerate(maddpg_agents.agents):
-        device = maddpg_agents.agents[agent_idx].target_actor.device
+#     for agent_idx, agent in enumerate(maddpg_agents.agents):
+#         device = maddpg_agents.agents[agent_idx].target_actor.device
 
-        agent_state = T.tensor([obs[agent_idx]], dtype=T.float).to(device)
-        action = agent.target_actor.forward(agent_state)
+#         agent_state = T.tensor([obs[agent_idx]], dtype=T.float).to(device)
+#         action = agent.target_actor.forward(agent_state)
 
-        actions.append(action)
-        actions_env.append(action.detach().cpu().numpy()[0])
+#         actions.append(action)
+#         actions_env.append(action.detach().cpu().numpy()[0])
 
-    mu = T.cat([acts for acts in actions], dim=1)
+#     mu = T.cat([acts for acts in actions], dim=1)
 
-    Q_all = []
-    for agent_idx, agent in enumerate(maddpg_agents.agents):
-        device = maddpg_agents.agents[agent_idx].target_critic.device
-        Q = agent.target_critic.forward(T.tensor([obs_list_to_state_vector(obs)], dtype=T.float).to(device), mu).flatten()
-        Q_all.append(Q.detach().cpu().numpy()[0])
+#     Q_all = []
+#     for agent_idx, agent in enumerate(maddpg_agents.agents):
+#         device = maddpg_agents.agents[agent_idx].target_critic.device
+#         Q = agent.target_critic.forward(T.tensor([obs_list_to_state_vector(obs)], dtype=T.float).to(device), mu).flatten()
+#         Q_all.append(Q.detach().cpu().numpy()[0])
 
-    obs, reward, done, info = env.step(actions_env)
-    sequence.append(obs)
-    print("")
-    print("Q_all: ", Q_all, Q_all[1:])
-    print("")
-    # input("Press Enter to continue...")
+#     obs, reward, done, info = env.step(actions_env)
+#     sequence.append(obs)
+#     print("")
+#     print("Q_all: ", Q_all, Q_all[1:])
+#     print("")
+#     # input("Press Enter to continue...")
 
-# sequence = np.array(sequence)
-print(sequence)
-print("")
-seq1 = np.concatenate((sequence[0][0], sequence[0][1], sequence[0][2]))
-seq2 = np.concatenate((sequence[1][0], sequence[1][1], sequence[1][2]))
+# # sequence = np.array(sequence)
+# print(sequence)
+# print("")
+# seq1 = np.concatenate((sequence[0][0], sequence[0][1], sequence[0][2]))
+# seq2 = np.concatenate((sequence[1][0], sequence[1][1], sequence[1][2]))
 
-print(np.linalg.norm(seq1-seq2))
+# print(np.linalg.norm(seq1-seq2))
 
+import pickle
+with open("temp.pickle", "rb") as f:
+    sequence = pickle.load(f)
+
+# sequence = sequence[0:4]
+
+from EDI.dataset import DataSet
+
+alpha = 0.2
+
+dataset = DataSet(maddpg_agents.agents, 0.4)
+io = dataset.calculate_IO(sequence)
+
+# print(io)
+# print(io[0][1][0])
+# print(len(io))
+
+
+# print(env.observation_space[0].shape[0])
+# print(env.observation_space[1].shape[0])
+# print(env.observation_space[2].shape[0])
+
+input_dims = 0
+for i in range(n_agents):
+    input_dims += env.observation_space[i].shape[0]
+# print(input_dims)
+
+from EDI.workingtitle import WorkingTitle
+
+workingtitle = WorkingTitle(maddpg_agents.agents, input_dims, alpha=0.4)
+workingtitle.learn(sequence)
+print(workingtitle.get_gamma_from_net(sequence[0], sequence[1]))
 

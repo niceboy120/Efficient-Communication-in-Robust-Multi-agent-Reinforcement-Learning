@@ -1,36 +1,30 @@
 import numpy as np
 import torch as T
 from utils import obs_list_to_state_vector
+from EDI.network import GammaNet
 
 
 
 ## TO DO HERE: do the Q values sheit, check the structure of sequence to make sure the slicing is done correcly in len and gamma
 
 class DataSet:
-    def __init__(self, agents, alpha=0.4):
+    def __init__(self, agents, alpha):
         self.agents = agents
         self.alpha = alpha
 
 
-    # def store_sequence():
-
-
-    # def sample_data():
-
-
-
-    def calculate_IO(self, sequence, alpha = None):
-        if alpha is None:
-            alpha = self.alpha     
+    def calculate_IO(self, sequence, min_length_sequence=20):
+        I = len(sequence)-1
         
-        gamma = self.calculate_gamma(sequence, alpha)
-
-        number_of_io_sets = len(sequence)-1
         io = []
-        for i in range(number_of_io_sets):
-            io.append() # Find out first what shape the io sets need...
+        for i in range(I-min_length_sequence):
+            gamma = self.calculate_gamma(sequence[i:])
+            for j in range(I-i-1):
+                # io.append([np.concatenate((sequence[i][0], sequence[i][1], sequence[i][2])), np.concatenate((sequence[i+j+1][0], sequence[i+j+1][1], sequence[i+j+1][2])), gamma])
+                io.append([sequence[i], sequence[i+j+1], gamma])
+        return io
 
-    def calculate_gamma(self, sequence, alpha):           
+    def calculate_gamma(self, sequence):           
         number_of_transitions = len(sequence)-1 # Need to know the number of transitions in the sequence
 
         # Initialization
@@ -41,7 +35,7 @@ class DataSet:
         while not done:
             if i>number_of_transitions:
                 done = True
-            elif any(self.get_Q_values(sequence[i], sequence[0]) <= np.array(self.get_Q_values(sequence[i], sequence[i]))-alpha): 
+            elif any(self.get_Q_values(sequence[i], sequence[0]) <= np.array(self.get_Q_values(sequence[i], sequence[i]))-self.alpha): 
                 # If for either agent 1 or agent 2 the Q values differ too much, stop.
                 done = True
             else:

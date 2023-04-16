@@ -59,6 +59,9 @@ class Train:
             done = [False]*self.n_agents
             episode_step = 0
 
+            episode_sequence = []
+            # episode_sequence.append(obs)
+
             while not any(done):
                 if self.mode=='test':
                     self.env.render()
@@ -82,10 +85,16 @@ class Train:
                     self.maddpg_agents.learn(self.memory)
 
                 obs = obs_
+                # episode_sequence.append(obs)
 
                 score += sum(reward)
                 total_steps += 1
                 episode_step += 1
+
+            # import pickle
+            # with open("temp.pickle", "wb") as f:
+            #     pickle.dump(episode_sequence, f)
+
 
             score_history.append(score)
             avg_score = np.mean(score_history[-300:])
