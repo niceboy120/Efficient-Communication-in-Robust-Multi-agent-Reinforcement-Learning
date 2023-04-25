@@ -17,11 +17,16 @@ class DataSet:
         I = len(sequence)-1
         
         io = []
+        gamma_cache = {}
         for i in range(I-min_length_sequence):
-            gamma = self.calculate_gamma(sequence[i:])
+            # gamma = self.calculate_gamma(sequence[i:])
+            gamma = gamma_cache.get(i, self.calculate_gamma(sequence[i:]))
+            gamma_cache[i] = gamma
             for j in range(I-i-1):
-                # io.append([np.concatenate((sequence[i][0], sequence[i][1], sequence[i][2])), np.concatenate((sequence[i+j+1][0], sequence[i+j+1][1], sequence[i+j+1][2])), gamma])
-                io.append([sequence[i], sequence[i+j+1], gamma])
+                for k in range(1,self.agents.n_agents):
+                    io.append([sequence[i][k], sequence[i+j+1][k], gamma[k-1]])
+                # io_ij = np.column_stack([sequence[i][1:], sequence[i+j+1][1:], gamma])
+                # io.append(io_ij)
         return io
 
     def calculate_gamma(self, sequence):           
@@ -31,44 +36,58 @@ class DataSet:
         done = False
         i = 1
 
+        mu0 = self.get_mu(sequence[0])
+
         # Loop
-        while not done:
-            if i>number_of_transitions:
-                done = True
-            elif any(self.get_Q_values(sequence[i], sequence[0]) <= np.array(self.get_Q_values(sequence[i], sequence[i]))-self.alpha): 
+        while not done and i<= number_of_transitions:
+            if any(self.get_Q_values(sequence[i], mu0) <= np.array(self.get_Q_values(sequence[i], self.get_mu(sequence[i])))-self.alpha): 
                 # If for either agent 1 or agent 2 the Q values differ too much, stop.
                 done = True
             else:
                 i += 1
 
         # Calculate gamma as the norm between the states
-        seq1 = np.concatenate((sequence[0][0], sequence[0][1], sequence[0][2]))
-        seq2 = np.concatenate((sequence[i-1][0], sequence[i-1][1], sequence[i-1][2]))
-        gamma = np.linalg.norm(seq1-seq2)
+        # gamma = np.linalg.norm(self.concat_obs(sequence[0])-self.concat_obs(sequence[i-1]))
 
+        # gamma = []
+        # for k in range(1, self.agents.n_agents):
+        #     gamma.append(np.linalg.norm(sequence[0][k]-sequence[i-1][k]))
+
+        gamma = [np.linalg.norm(sequence[0][k]-sequence[i-1][k]) for k in range(1, self.agents.n_agents)]
         return gamma
 
 
-    def get_Q_values(self, state, state_mu):
+    def get_Q_values(self, state, mu):
+        Q_all = []
+
+        # Loop through agents and get Q values for state, with optimal actions for state_mu
+        for i in range(1, self.agents.n_agents): #agent_idx, agent in enumerate(self.agents.agents):
+            agent = self.agents.agents[i]        
+            device = self.agents.agents[i].target_critic.device
+            Q = agent.target_critic.forward(T.tensor([obs_list_to_state_vector(state)], dtype=T.float).to(device), mu).flatten()
+            Q_all.append(Q.detach().cpu().numpy()[0])
+        
+        # We only ned the Q values for the "good" agents, not the adversaries
+        return Q_all
+    
+
+    def get_mu(self, state_mu):
         actions = []
 
         # Loop through agents and get optimal actions for state_mu
-        for agent_idx, agent in enumerate(self.agents):
-            device = self.agents[agent_idx].target_actor.device
+        for agent_idx, agent in enumerate(self.agents.agents):
+            device = self.agents.agents[agent_idx].target_actor.device
             agent_state_mu = T.tensor([state_mu[agent_idx]], dtype=T.float).to(device)
 
             action = agent.target_actor.forward(agent_state_mu)
             actions.append(action)
 
         mu = T.cat([acts for acts in actions], dim=1)
+        return mu
 
-        Q_all = []
 
-        # Loop through agents and get Q values for state, with optimal actions for state_mu
-        for agent_idx, agent in enumerate(self.agents):
-            device = self.agents[agent_idx].target_critic.device
-            Q = agent.target_critic.forward(T.tensor([obs_list_to_state_vector(state)], dtype=T.float).to(device), mu).flatten()
-            Q_all.append(Q.detach().cpu().numpy()[0])
-        
-        # We only ned the Q values for the "good" agents, not the adversaries
-        return Q_all[1:]
+
+
+    # @ staticmethod
+    # def concat_obs(observation):
+    #     return np.concatenate((observation[0], observation[1], observation[2]))

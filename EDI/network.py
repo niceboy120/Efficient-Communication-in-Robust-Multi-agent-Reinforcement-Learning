@@ -31,10 +31,8 @@ class GammaNet(nn.Module):
         return Gam
 
     def save_checkpoint(self):
-        print('... saving gammanet checkpoint ...')
         T.save(self.state_dict(), self.chkpt_file)
 
     def load_checkpoint(self):
-        print('... loading gammanet checkpoint ...')
         self.load_state_dict(T.load(self.chkpt_file))
 
