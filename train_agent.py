@@ -1,53 +1,42 @@
 import numpy as np
+import time
 from MADDPG.maddpg import MADDPG
 from MADDPG.buffer import MultiAgentReplayBuffer
 from EDI.netutilities import NetUtilities
-from make_env import make_env
-import time
-from utils import obs_list_to_state_vector
+from MPE.make_env import make_env
+from utils import obs_list_to_state_vector, HyperParameters
 
-## IMORT EDI THINGS
+
 
 class Train:
-    def __init__(self, mode='train', edi_mode='disabled', load=False, save=True, edi_load=False, edi_save=True, print_interval=500, N_games=50000, max_steps=50, alpha=0.0, gamma_batch_size=32, render=True):
-        self.mode = mode
-        if self.mode=='test':
-            self.load = True
-            self.save = False
-        elif self.mode=='train':
-            self.load = load
-            self.save = save
-        else:
-            raise Exception("Wrong mode selected, please choose 'test' or 'train'")
-        
-        self.edi_mode = edi_mode
-        if self.edi_mode=='disabled':
-            self.edi_load = False
-            self.edi_save = False
-        elif self.edi_mode=='test':
-            self.edi_load = True
-            self.edi_save = False
-        elif self.edi_mode=='parallel':
-            self.edi_load = edi_load
-            self.edi_save = edi_save
-        elif self.edi_mode=='sequential': # NOT YET IMPLEMENTED
-            self.edi_load = edi_load
-            self.edi_save = edi_save
-        else:
-            raise Exception("Wrong EDI mode selected, please choose 'parallel', 'sequential' 'test' or 'disabled' (sequential training not yet implemented!!!!)")
-    
-        self.print_interval = print_interval
-        self.N_games = N_games
-        self.max_steps = max_steps
+    def __init__(self, scenario):
+        self.par = HyperParameters()
 
-        scenario = 'simple_adversary'
         self.env = make_env(scenario)
         self.n_agents = self.env.n
 
-        self.alpha = alpha
-        self.gamma_batch_size = gamma_batch_size
+        self.n_adversaries = 0
+        self.n_good_agents = 0
 
-        self.render = render
+        for i in range(self.n_agents):
+            if self.env.world.agents[i].adversary:
+                self.n_adversaries += 1
+            else:
+                self.n_good_agents += 1
+
+        if self.n_adversaries>1:
+            self.cooperating_agents_mask = list(range(0,self.n_adversaries))
+        else:
+            self.cooperating_agents_mask = list(range(self.n_adversaries,self.n_adversaries+self.n_good_agents))
+
+        if scenario=='simple_tag':
+            self.pos_mask = [2,3]
+            self.pos_others_mask = list(range(8, 8+(self.n_adversaries-1)*2))
+        elif scenario=='simple_adversary':
+            self.pos_mask = [0,1]
+            self.pos_others_mask = list(range(8, 8+(self.n_good_agents-1)*2))
+        else:
+            print("WARNING: You picked a scenario for which EDI is not implemented.")
 
         actor_dims = []
         for i in range(self.n_agents):
@@ -57,110 +46,123 @@ class Train:
         self.n_actions = self.env.action_space[0].n
         self.maddpg_agents = MADDPG(actor_dims, critic_dims, self.n_agents, self.n_actions, 
                             fc1=64, fc2=64,  
-                            alpha=0.01, beta=0.01, scenario=scenario,
-                            chkpt_dir='MADDPG/tmp/maddpg/')
+                            lr_actor=0.01, lr_critic=0.01, scenario=scenario, gamma=self.par.gamma,
+                            tau=self.par.tau, chkpt_dir='MADDPG/tmp/')
 
         self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
         
-
         self.gamma_input_dims = self.env.observation_space[1].shape[0]
-
-        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha = self.alpha, batch_size = self.gamma_batch_size)
-
-
-
         
-    def loop(self):
-        total_steps = 0
-        score_history = []
-        communications_history = []
-        best_score = 0
 
-        self.load_nets()
 
-        for i in range(self.N_games):
-            obs = self.env.reset()
-            last_comm1 = obs[1][0:2]
-            last_comm2 = obs[2][0:2] 
+    def run_episodes(self, is_testing, edi_mode, load, edi_load, render, alpha):
+        try:
+            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size)
 
-            score = 0
-            communications = 0
-            done = [False]*self.n_agents
-            episode_step = 0
+            total_steps = 0
+            history = [] # Score adversaries, score good agents, communications of cooperating agents when applicable
+            best = [-1000,-1000] # Best score adversaries, best score good agents
 
-            episode_sequence = []
-            episode_sequence.append(obs)
+            if is_testing:
+                load = True
+            self.load_nets(load, edi_load)            
 
-            while not any(done):
-                if self.mode=='test':
-                    if self.render:
+            if is_testing:
+                N_games = self.par.N_games
+            else:
+                N_games = self.par.N_games_test
+
+            for i in range(N_games):
+                obs = self.env.reset()
+                if edi_mode=='test':
+                    last_comm = []
+                    for a in self.cooperating_agents_mask:
+                        last_comm.append(obs[a][self.pos_mask])
+
+                score = [0,0] # Score adversaries, score good agents
+                communications = 0
+                done = [False]*self.n_agents
+                episode_step = 0
+
+                episode_sequence = []
+                episode_sequence.append(obs)
+
+                while not any(done):
+                    if is_testing and render:
                         self.env.render()
                         time.sleep(0.1)
 
-                    if self.edi_mode=='test':
-                        obs, last_comm1, last_comm2, communications = self.communication_protocol(obs, last_comm1, last_comm2, communications)
+                    if is_testing and edi_mode=='test':
+                        obs, last_comm, communications = self.communication_protocol(obs, last_comm, communications)
                     else:
-                        communications += 2
-                    actions = self.maddpg_agents.eval_choose_action(obs)
-                    
-                else:
-                    actions = self.maddpg_agents.choose_action(obs)
-                obs_, reward, done, info = self.env.step(actions)
+                        communications += len(self.cooperating_agents_mask)*(len(self.cooperating_agents_mask)-1)
 
-                state = obs_list_to_state_vector(obs)
-                state_ = obs_list_to_state_vector(obs_)
+                    actions = self.maddpg_agents.choose_action(obs, self.par.eps)
+                    obs_, reward, done, info = self.env.step(actions)
 
-                if episode_step >= self.max_steps:
-                    done = [True]*self.n_agents
+                    state = obs_list_to_state_vector(obs)
+                    state_ = obs_list_to_state_vector(obs_)
 
-                self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
+                    if episode_step >= self.par.max_steps:
+                        done = [True]*self.n_agents
 
-                if total_steps % 100 == 0 and self.mode=='train':
-                    self.maddpg_agents.learn(self.memory)
+                    if not is_testing:
+                        self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
+                        if total_steps % 100 == 0:
+                            self.maddpg_agents.learn(self.memory)
 
-                obs = obs_
-                episode_sequence.append(obs)
+                    obs = obs_
+                    episode_sequence.append(obs)
 
-                score += sum(reward)
-                total_steps += 1
-                episode_step += 1
+                    score[0] += sum(reward[0:self.n_adversaries])
+                    score[1] += sum(reward[self.n_adversaries:])
+                    total_steps += 1
+                    episode_step += 1
 
-            if self.edi_mode=='parallel':
-                self.gammanet.learn(episode_sequence)
+                if edi_mode=='train':
+                    self.gammanet.learn(episode_sequence)
 
-            score_history.append(score)
-            communications_history.append(communications)
-            avg_score = np.mean(score_history[-300:])
+                history.append(score + [communications])
+                avg = np.mean(history[-300:], axis=0)
+                best = [max(els) for els in zip(best, avg[0:2])]
 
-            if self.mode=='train':
-                if avg_score > best_score:
-                    if self.save and i>300:
-                        self.maddpg_agents.save_checkpoint()
-                        self.gammanet.save()
-                        if np.std(score_history[-2000:]) <= 0.3:
-                            print("Models trained, switching mode to testing")
-                            self.mode = 'test'
-                    best_score = avg_score                    
-            # else:
-            #     print("Score: ", score)
-            #     print("Communications: ", communications)
-            if i % self.print_interval == 0 and i > 0:
-                print('episode', i, 'average score {:.1f}'.format(avg_score))
+                if i % self.par.print_interval == 0 and i > 0:
+                    if edi_mode=='test':
+                        print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
+                              ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
+                              ', best score good agents: {:.1f}'.format(best[1]), ', average communications: {:.1f}'.format(avg[2]))
+                    else:
+                        print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
+                              ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
+                              ', best score good agents: {:.1f}'.format(best[1]))
 
-        
-        if self.mode=='test':
-            return score_history, communications_history
-        
-        # print("Final best score: ", best_score)
-        # self.ask_save()
-        if self.save:
-            self.maddpg_agents.save_checkpoint()
-        if self.edi_save:
-            self.gammanet.save()
+            if edi_mode=='train':
+                self.gammanet.save()
+
+            if is_testing:
+                return history
+            else: 
+                self.maddpg_agents.save_checkpoint()
+                self.gammanet.save()
+
+        except KeyboardInterrupt:
+            self.ask_save(edi_mode)
 
 
-    def ask_save(self):
+
+    def training(self, edi_mode='disabled', load=True, edi_load=True, render=False, alpha=0.0):
+        is_testing = False
+        self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha)
+
+
+
+    def testing(self, edi_mode='disabled', load=True, edi_load=True, render=True, alpha=0.0):
+        is_testing = True
+        self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha)
+
+
+    def ask_save(self, edi_mode):
         answer = False
         while not answer:
             user_input = input("Would you like to save the agent models? (y/n) ")
@@ -176,25 +178,26 @@ class Train:
 
 
         # Maybe add if statement if even applicable??
-        answer = False
-        while not answer:
-            user_input = input("Would you like to save gamma? (y/n) ")
-            if user_input.lower() == 'y':
-                self.gammanet.save()
-                answer = True
-            elif user_input.lower() == 'n':
-                answer = True
-                pass
-            else:
-                print("Invalid reply, please respond y or n")
+        if edi_mode != 'disabled':
+            answer = False
+            while not answer:
+                user_input = input("Would you like to save gamma? (y/n) ")
+                if user_input.lower() == 'y':
+                    self.gammanet.save()
+                    answer = True
+                elif user_input.lower() == 'n':
+                    answer = True
+                    pass
+                else:
+                    print("Invalid reply, please respond y or n")
 
 
 
-    def load_nets(self):
-        if self.load:
+    def load_nets(self, load, edi_load):
+        if load:
             self.maddpg_agents.load_checkpoint()
 
-        if self.edi_load:
+        if edi_load:
             self.gammanet.load()
 
 
@@ -233,15 +236,3 @@ class Train:
         obs = [obs[0], obs1, obs2]
 
         return obs, last_comm1, last_comm2, communications
-
-
-    # def force_save(self):
-    #     self.maddpg_agents.save_checkpoint()
-
-
-    # @staticmethod
-    # def obs_list_to_state_vector(observation):
-    #     state = np.array([])
-    #     for obs in observation:
-    #         state = np.concatenate([state, obs])
-    #     return state
