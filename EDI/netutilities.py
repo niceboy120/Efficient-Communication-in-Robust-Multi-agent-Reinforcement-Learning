@@ -27,8 +27,8 @@ class NetUtilities():
     # def check_communication(): # Check, given a gamma, if the state is too much changed compared with last broadcast
 
 
-    def learn(self, sequence): # learning step for the network?
-        io = self.dataset.calculate_IO(sequence)
+    def learn(self, sequence, cooperating_agents_mask): # learning step for the network?
+        io = self.dataset.calculate_IO(sequence, cooperating_agents_mask)
 
         device = self.gammanet.device
 

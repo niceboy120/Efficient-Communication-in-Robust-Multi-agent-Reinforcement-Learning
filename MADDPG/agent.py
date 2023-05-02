@@ -25,7 +25,9 @@ class Agent:
 
         self.update_network_parameters(tau=1)
 
-    def choose_action(self, observation, eps):
+    def choose_action(self, observation, eps, ratio, decreasing_eps):
+        if decreasing_eps:
+            eps = (1-ratio)*eps
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
         actions = self.actor.forward(state)
         noise = T.rand(self.n_actions).to(self.actor.device)

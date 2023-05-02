@@ -2,8 +2,8 @@ import numpy as np
 
 class HyperParameters:
     def __init__(self):
-        self.N_games = 100000
-        self.N_games_test = 1000
+        self.N_games = 8000
+        self.N_games_test = 2000
         self.print_interval = 100
         self.max_steps = 50
         self.eps = 0.1
