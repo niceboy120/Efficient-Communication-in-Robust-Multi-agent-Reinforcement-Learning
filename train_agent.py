@@ -210,7 +210,7 @@ class Train:
             team_members.pop(j)
 
             for i in range(len(team_members)):
-                temp[self.pos_others_mask[i*2]:self.pos_others_mask[i*2]+2] = last_comm[team_members[i]] - temp[self.pos_mask[0]:self.pos_mask[1]+1]
+                temp[self.pos_others_mask[i*2]:self.pos_others_mask[i*2]+2] = last_comm[team_members[i]] - temp[self.pos_mask]
             agent_knowledge.append(temp)
 
             temp2 = temp.copy()
@@ -222,7 +222,7 @@ class Train:
         for i in range(len(self.cooperating_agents_mask)):
             if self.gammanet.communication(agent_knowledge[i], agent_knowledge_[i]):
                # Agent 1 sends update
-                last_comm[i] = agent_knowledge[i][self.pos_mask[0]:self.pos_mask[1]+1]
+                last_comm[i] = agent_knowledge[i][self.pos_mask]
                 communications += 1
 
 
@@ -232,7 +232,7 @@ class Train:
             team_members.pop(j)
 
             for i in range(len(team_members)):
-                temp[self.pos_others_mask[i*2]:self.pos_others_mask[i*2]+2] = last_comm[team_members[i]] - temp[self.pos_mask[0]:self.pos_mask[1]+1]
+                temp[self.pos_others_mask[i*2]:self.pos_others_mask[i*2]+2] = last_comm[team_members[i]] - temp[self.pos_mask]
 
             obs[n] = temp
 
