@@ -4,23 +4,23 @@
 # train_agents.testing(edi_mode='test', edi_load=False)
 
 
-import pickle
-import matplotlib.pyplot as plt
+# import pickle
+# import matplotlib.pyplot as plt
 
-with open('results.pickle', 'rb') as f:
-        data = pickle.load(f)
+# with open('results.pickle', 'rb') as f:
+#         data = pickle.load(f)
 
-print(data)
+# print(data)
 
-fig,ax = plt.subplots()
-ax.plot([-0.2]+data[0], data[1][:,0], color="red", marker="o")
-ax.set_xlabel("alpha", fontsize=14)
-ax.set_ylabel("score", color="red", fontsize=14)
+# fig,ax = plt.subplots()
+# ax.plot([-0.2]+data[0], data[1][:,0], color="red", marker="o")
+# ax.set_xlabel("alpha", fontsize=14)
+# ax.set_ylabel("score", color="red", fontsize=14)
 
-ax2=ax.twinx()
-ax2.plot([-0.2]+data[0], data[1][:,2], color="blue", marker="o")
-ax2.set_ylabel("communications", color="blue", fontsize=14)
-plt.show()
+# ax2=ax.twinx()
+# ax2.plot([-0.2]+data[0], data[1][:,2], color="blue", marker="o")
+# ax2.set_ylabel("communications", color="blue", fontsize=14)
+# plt.show()
 
 
 
@@ -69,3 +69,28 @@ plt.show()
 
     
 #     input("Press Enter to continue...")
+
+
+
+
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def func(x):
+        if x < 0.9:
+                return 0
+        if x < 1.0:
+                return (x - 0.9) * 50
+        return min(np.exp(3 * x - 2), 20)
+
+x = np.linspace(0,5,101)
+print(x)
+
+y = []
+for i in range(len(x)):
+        y.append(func(x[i]))
+plt.plot(x, y)
+plt.show() 
