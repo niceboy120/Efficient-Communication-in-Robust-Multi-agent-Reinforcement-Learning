@@ -21,10 +21,11 @@ class MADDPG:
         for agent in self.agents:
             agent.save_models()
 
-    def load_checkpoint(self):
+    def load_checkpoint(self, load_mask):
         print('... loading checkpoint ...')
-        for agent in self.agents:
-            agent.load_models()
+        for i, agent in enumerate(self.agents):
+            if i in load_mask:
+                agent.load_models()
 
     def choose_action(self, raw_obs, eps, ratio, decreasing_eps):
         actions = []

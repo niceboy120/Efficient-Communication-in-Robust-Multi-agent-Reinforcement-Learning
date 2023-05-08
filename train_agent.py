@@ -56,7 +56,7 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps):
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, decreasing_eps, N_games):
         self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size)
 
         total_steps = 0
@@ -65,12 +65,16 @@ class Train:
 
         if is_testing:
             load = True
-        self.load_nets(load, edi_load)            
+        self.load_nets(load, edi_load, load_adversaries)            
 
-        if is_testing:
-            N_games = self.par.N_games_test
-        else:
-            N_games = self.par.N_games
+        if N_games == None:
+            if is_testing:
+                N_games = self.par.N_games_test
+            else:
+                if edi_mode=='train':
+                    N_games = self.par.N_games_edi
+                else:
+                    N_games = self.par.N_games
 
         for i in range(N_games):
             obs = self.env.reset()
@@ -139,27 +143,34 @@ class Train:
         if edi_mode=='train':
             self.gammanet.save()
 
-        if is_testing:
-            return history
-        else: 
+        if not is_testing:
             self.maddpg_agents.save_checkpoint()
             self.gammanet.save()
+
+        return history
             
 
 
 
-    def training(self, edi_mode='disabled', load=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True, N_games=None):
+        if edi_mode=='disabled':
+            edi_load = False
+
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, decreasing_eps, N_games)
+        return history
+    
 
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False, N_games=None):
+        if edi_mode=='disabled':
+            edi_load = False
 
-    def testing(self, edi_mode='disabled', load=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False):
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, decreasing_eps, N_games)
         return history
 
 
@@ -192,9 +203,16 @@ class Train:
                 print("Invalid reply, please respond y or n")
 
 
-    def load_nets(self, load, edi_load):
+    def load_nets(self, load, edi_load, load_adversaries):
+        load_mask = []
+        for i in range(self.n_agents):
+            if not self.env.world.agents[i].adversary:
+                load_mask.append(i)
+            elif load_adversaries:
+                load_mask.append(i)
+
         if load:
-            self.maddpg_agents.load_checkpoint()
+            self.maddpg_agents.load_checkpoint(load_mask)
 
         if edi_load:
             self.gammanet.load()

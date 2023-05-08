@@ -3,53 +3,76 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 
-# alpha = [0.0, 0.05, 0.1, 0.15, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0]
-# alpha = [3.0]
-alpha = [100.0]
+
+# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True, N_games=None):
+# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False, N_games=Nones):
+
+
+alpha = [0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
 
 
 if __name__ == '__main__':
+    stop = 0
 
     while True:
+        if stop > 0:
+            break
+
         try:
             train_agents = Train('simple_tag')
-            # for a in alpha:
-            #     print("Training with alpha = ", a)
-            #     train_agents.training(edi_mode='train', edi_load=True, alpha=a)
 
-            # history = train_agents.testing(edi_mode='disabled', render=False)
-            # mean = np.mean(history, axis=0)
-            # std = np.std(history, axis=0)
+            # Training maddpg agents
+            history = []
+            for i in range(2,10):
+                if i==0:
+                    history_session = train_agents.training(load=False)
+                elif i==1:
+                    history_session = train_agents.training(load=True, load_adversaries=False)
+                else: 
+                    history_session = train_agents.training()
 
-            # alpha = [0.0, 0.05, 0.1, 0.15, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0]
-            alpha = [0.1, 1.0, 10.0, 100.0]
+                for j in range(len(history_session)):
+                    history.append(history_session[j][0])
 
+                # train_agents.testing(N_games = 5)
+                    
+            with open('results_convergence.pickle', 'wb+') as f:
+                pickle.dump([history], f)
+
+            # Testing agents
+            # train_agents.testing()
+
+
+            # Training gammanets for different alphas
+            for a in alpha:
+                print("Training with alpha = ", a)
+                train_agents.training(edi_mode='train', edi_load=False, alpha=a)
+
+            # Testing with EDI disabled
+            history = train_agents.testing(edi_mode='disabled', render=False)
+            mean = np.mean(history, axis=0)
+            std = np.std(history, axis=0)
+
+            # Testing EDI for different alphas
             for a in alpha:
                 print("Testing with alpha = ", a)
-                history = train_agents.testing(edi_mode='test', render=True, alpha=a)
-                # mean = np.vstack((mean, np.mean(history, axis=0)))
-                # std = np.vstack((std, np.std(history, axis=0)))
-                print('Press enter')
-                response = input()
+                history = train_agents.testing(edi_mode='test', render=False, alpha=a)
+                mean = np.vstack((mean, np.mean(history, axis=0)))
+                std = np.vstack((std, np.std(history, axis=0)))
 
-            # with open('results.pickle', 'wb+') as f:
-            #     pickle.dump([alpha, mean, std],f)
+            # Dumping output
+            with open('results_edi.pickle', 'wb+') as f:
+                pickle.dump([alpha, mean, std],f)
+
+
+            # Want to make it so it does not always overwrite the picle file. maybe add to it?
+            # Change name alpha to zeta?
+            
 
             
 
-            # with open('results.pickle', 'rb') as f:
-            #     data = pickle.load(f)
 
-            # fig,ax = plt.subplots()
-            # ax.plot(data[0], data[1][1:,0], color="red", marker="o")
-            # ax.set_xlabel("alpha", fontsize=14)
-            # ax.set_ylabel("score", color="red", fontsize=14)
-
-            # ax2=ax.twinx()
-            # ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
-            # ax2.set_ylabel("communications", color="blue", fontsize=14)
-            # plt.show()
-
+            # train_agents.testing()
 
                 
         except KeyboardInterrupt:
@@ -61,6 +84,8 @@ if __name__ == '__main__':
             else:
                 print('Resuming...')
                 continue
+
+        stop += 1 
 
 
 

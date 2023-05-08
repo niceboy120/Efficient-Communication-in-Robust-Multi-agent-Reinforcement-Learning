@@ -104,8 +104,10 @@ class Scenario(BaseScenario):
             if x < 0.9:
                 return 0
             if x < 1.0:
-                return (x - 0.9) * 10
-            return min(np.exp(2 * x - 2), 10)
+                return (x - 0.9) * 100
+            return min(np.exp(4 * x - 2), 40)
+            # else:
+                # return 50
         for p in range(world.dim_p):
             x = abs(agent.state.p_pos[p])
             rew -= bound(x)
@@ -119,14 +121,39 @@ class Scenario(BaseScenario):
         agents = self.good_agents(world)
         adversaries = self.adversaries(world)
         if shape:  # reward can optionally be shaped (decreased reward for increased distance from agents)
+            dist = []
             for adv in adversaries:
-                rew -= 0.1 * min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents])
+                dist.append(min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents]))
+            rew += -0.5*sum(dist)
+            while len(dist)>2: # This will get the distance of the two closest adversaries to agents
+                dist.remove(max(dist)) 
+            rew += -abs(dist[0]-dist[1]) # We want to minimize the difference in distance, i.e. the two adversaries to the agent should be at the same distance from the agents
         if agent.collide:
-            for ag in agents:
-                for adv in adversaries:
+            collision = 0
+
+            for adv in adversaries:
+                for ag in agents: 
                     if self.is_collision(ag, adv):
-                        rew += 10
+                        collision += 1
+                        rew += 2
+                for adv2 in adversaries:
+                    if adv==adv2:
+                        pass
+                    else:
+                        if self.is_collision(adv, adv2):
+                            rew += -1
+            if collision > 1:
+                rew += 100 
         return rew
+    
+
+    # def second_smallest(self, numbers):
+    #     from heapq import nsmallest
+    #     from itertools import filterfalse
+    #     s = set()
+    #     sa = s.add
+    #     un = (sa(n) or n for n in filterfalse(s.__contains__, numbers))
+    #     return nsmallest(2, un)[-1]
 
     def observation(self, agent, world):
         # get positions of all entities in this agent's reference frame

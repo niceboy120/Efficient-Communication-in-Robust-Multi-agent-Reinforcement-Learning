@@ -2,9 +2,10 @@ import numpy as np
 
 class HyperParameters:
     def __init__(self):
-        self.N_games = 3000
-        self.N_games_test = 2
-        self.print_interval = 1
+        self.N_games = 10000
+        self.N_games_edi = 2000
+        self.N_games_test = 2000
+        self.print_interval = 100
         self.max_steps = 50
         self.eps = 0.1
         self.gamma_batch_size = 32
@@ -16,3 +17,4 @@ def obs_list_to_state_vector(observation):
     for obs in observation:
         state = np.concatenate([state, obs])
     return state
+

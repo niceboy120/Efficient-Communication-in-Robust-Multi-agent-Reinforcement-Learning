@@ -1,96 +1,30 @@
-# from train_agent import Train
-
-# train_agents = Train('simple_tag')
-# train_agents.testing(edi_mode='test', edi_load=False)
+# import numpy as np
 
 
-# import pickle
+# def bound(x):
+#     if x < 0.8:
+#         return 0
+#     if x < 1.0:
+#         return (x - 0.8) * 100
+#     return min((20+(x-1)*15), 40)
+
+# x = np.linspace(0,5,1001)
+# print(x)
+
+# y = []
+
+# for i in range(len(x)):
+#     y.append(bound(x[i]))
+
 # import matplotlib.pyplot as plt
 
-# with open('results.pickle', 'rb') as f:
-#         data = pickle.load(f)
-
-# print(data)
-
-# fig,ax = plt.subplots()
-# ax.plot([-0.2]+data[0], data[1][:,0], color="red", marker="o")
-# ax.set_xlabel("alpha", fontsize=14)
-# ax.set_ylabel("score", color="red", fontsize=14)
-
-# ax2=ax.twinx()
-# ax2.plot([-0.2]+data[0], data[1][:,2], color="blue", marker="o")
-# ax2.set_ylabel("communications", color="blue", fontsize=14)
+# plt.plot(x,y)
 # plt.show()
 
 
+mask = [1,4,7, 11, 3, 67, 10]
 
+while len(mask)>2:
+    mask.remove(max(mask))
 
-
-# import time
-# import numpy as np
-# import pickle
-
-# from MPE.make_env import make_env
-# env = make_env('simple_tag')
-# obs = env.reset()
-
-
-
-# for i in range(10):
-#     env.render()
-#     print(obs)
-
-#     no_op = np.array([0, 0.1, 0.12, 0.33, 0.54])
-#     action = [no_op, no_op, no_op, no_op]
-#     obs, reward, done, info = env.step(action)
-
-#     print("")
-#     print(obs[0])
-#     print(obs[1])
-#     print(obs[2])
-#     print(obs[3])
-
-
-#     mask_agent = [0,1,2]
-#     mask_msg = [2,3]
-
-#     comm = []
-#     knowledge = []
-
-#     for i in mask_agent:
-#         comm.append(obs[i][mask_msg])
-#         knowledge.append(obs[i])
-    
-#     print(comm)
-
-    
-    
-#     print(knowledge)
-
-    
-#     input("Press Enter to continue...")
-
-
-
-
-
-
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-def func(x):
-        if x < 0.9:
-                return 0
-        if x < 1.0:
-                return (x - 0.9) * 50
-        return min(np.exp(3 * x - 2), 20)
-
-x = np.linspace(0,5,101)
-print(x)
-
-y = []
-for i in range(len(x)):
-        y.append(func(x[i]))
-plt.plot(x, y)
-plt.show() 
+print(mask)
