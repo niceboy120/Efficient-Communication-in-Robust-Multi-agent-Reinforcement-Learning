@@ -45,8 +45,8 @@ class Train:
 
         self.n_actions = self.env.action_space[0].n
         self.maddpg_agents = MADDPG(actor_dims, critic_dims, self.n_agents, self.n_actions, 
-                            fc1=64, fc2=64,  
-                            lr_actor=0.01, lr_critic=0.01, scenario=scenario, gamma=self.par.gamma,
+                            self.par.noise_mode, scenario=scenario, lr_actor=0.01, lr_critic=0.01,   
+                            fc1=64, fc2=64, gamma=self.par.gamma,
                             tau=self.par.tau, chkpt_dir='MADDPG/tmp/')
 
         self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
@@ -56,7 +56,7 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps):
+    def run_episodes(self, is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps, lexi_mode):
         self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size)
 
         total_steps = 0
@@ -109,7 +109,7 @@ class Train:
                 if not is_testing:
                     self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
                     if total_steps % 100 == 0:
-                        self.maddpg_agents.learn(self.memory)
+                        self.maddpg_agents.learn(self.memory, lexi_mode)
 
                 obs = obs_
                 episode_sequence.append(obs)
@@ -148,18 +148,18 @@ class Train:
 
 
 
-    def training(self, edi_mode='disabled', load=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True):
+    def training(self, edi_mode='disabled', load=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True, lexi_mode=False):
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps)
+        self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps, lexi_mode)
 
 
-    def testing(self, edi_mode='disabled', load=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False):
+    def testing(self, edi_mode='disabled', load=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False, lexi_mode=False):
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps)
+        history = self.run_episodes(is_testing, edi_mode, load, edi_load, render, alpha, decreasing_eps, lexi_mode)
         return history
 
 

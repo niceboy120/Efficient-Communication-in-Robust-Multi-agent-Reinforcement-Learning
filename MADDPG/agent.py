@@ -1,9 +1,11 @@
 import torch as T
 from MADDPG.networks import ActorNetwork, CriticNetwork
 import random
+from LRRL.lexicographic import LexicographicWeights
+from LRRL.noise_generator import NoiseGenerator
 
 class Agent:
-    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, chkpt_dir,
+    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, noise_mode, chkpt_dir,
                     lr_actor=0.01, lr_critic=0.01, fc1=64, 
                     fc2=64, gamma=0.95, tau=0.01):
         self.gamma = gamma
@@ -22,7 +24,12 @@ class Agent:
                                             fc1, fc2, n_agents, n_actions,
                                             chkpt_dir=chkpt_dir,
                                             name=self.agent_name+'_target_critic')
+        
 
+        self.noise = NoiseGenerator(mode = noise_mode)
+        self.lexicographic_weights = LexicographicWeights(self.noise)
+        self.recent_losses = LexicographicWeights.init_losses()
+        
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation, eps, ratio, decreasing_eps):

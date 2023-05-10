@@ -10,6 +10,7 @@ class HyperParameters:
         self.gamma_batch_size = 32
         self.gamma = 0.99
         self.tau = 0.01
+        self.noise_mode = 1
 
 def obs_list_to_state_vector(observation):
     state = np.array([])

@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from MADDPG.agent import Agent
 
 class MADDPG:
-    def __init__(self, actor_dims, critic_dims, n_agents, n_actions, 
+    def __init__(self, actor_dims, critic_dims, n_agents, n_actions, noise_mode,
                  scenario='simple',  lr_actor=0.01, lr_critic=0.01, fc1=64, 
                  fc2=64, gamma=0.99, tau=0.01, chkpt_dir='tmp/maddpg/'):
         self.agents = []
@@ -12,9 +12,9 @@ class MADDPG:
         chkpt_dir += scenario 
         for agent_idx in range(self.n_agents):
             self.agents.append(Agent(actor_dims[agent_idx], critic_dims,  
-                            n_actions, n_agents, agent_idx, lr_actor=lr_actor, lr_critic=lr_critic,
+                            n_actions, n_agents, agent_idx, noise_mode, lr_actor=lr_actor, lr_critic=lr_critic,
                             chkpt_dir=chkpt_dir))
-
+        
 
     def save_checkpoint(self):
         print('... saving checkpoint ...')
@@ -40,7 +40,7 @@ class MADDPG:
             actions.append(action)
         return actions
 
-    def learn(self, memory):
+    def learn(self, memory, lexi_mode):
         if not memory.ready():
             return
 
@@ -87,8 +87,19 @@ class MADDPG:
             critic_loss.backward(retain_graph=True)
             agent.critic.optimizer.step()
 
+
+
             actor_loss = agent.critic.forward(states, mu).flatten()
             actor_loss = -T.mean(actor_loss)
+
+            if lexi_mode:
+                w = agent.lexicographic_weights.compute_weights()
+                robust_loss = agent.lexicographic_weights.robust_loss(T.tensor(actor_states[agent_idx], dtype=T.float).to(device), all_agents_new_mu_actions[agent_idx], agent)
+                agent.recent_losses[0].append(-actor_loss)
+                agent.recent_losses[1].append(robust_loss)
+                self.lexicographic_weights.update_lagrange(agent.recent_losses)
+                actor_loss = actor_loss +  robust_loss*(w[1]/w[0])
+
             agent.actor.optimizer.zero_grad()
             actor_loss.backward(retain_graph=True)
             agent.actor.optimizer.step()
