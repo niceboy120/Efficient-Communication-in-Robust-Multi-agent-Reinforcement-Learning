@@ -28,7 +28,7 @@ class Agent:
 
         self.noise = NoiseGenerator(mode = noise_mode)
         self.lexicographic_weights = LexicographicWeights(self.noise)
-        self.recent_losses = LexicographicWeights.init_losses()
+        self.recent_losses = self.lexicographic_weights.init_recent_losses()
         
         self.update_network_parameters(tau=1)
 

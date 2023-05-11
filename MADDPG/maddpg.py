@@ -5,7 +5,7 @@ from MADDPG.agent import Agent
 class MADDPG:
     def __init__(self, actor_dims, critic_dims, n_agents, n_actions, noise_mode,
                  scenario='simple',  lr_actor=0.01, lr_critic=0.01, fc1=64, 
-                 fc2=64, gamma=0.99, tau=0.01, chkpt_dir='tmp/maddpg/'):
+                 fc2=64, gamma=0.99, tau=0.01, chkpt_dir='trained_nets/regular/'):
         self.agents = []
         self.n_agents = n_agents
         self.n_actions = n_actions
@@ -96,9 +96,10 @@ class MADDPG:
             if lexi_mode:
                 w = agent.lexicographic_weights.compute_weights()
                 robust_loss = agent.lexicographic_weights.robust_loss(T.tensor(actor_states[agent_idx], dtype=T.float).to(device), all_agents_new_mu_actions[agent_idx], agent)
+                robust_loss = T.tensor(robust_loss, dtype=T.float).to(device)
                 agent.recent_losses[0].append(-actor_loss)
                 agent.recent_losses[1].append(robust_loss)
-                self.lexicographic_weights.update_lagrange(agent.recent_losses)
+                agent.lexicographic_weights.update_lagrange(agent.recent_losses)
                 actor_loss = actor_loss +  robust_loss*(w[1]/w[0])
 
             agent.actor.optimizer.zero_grad()

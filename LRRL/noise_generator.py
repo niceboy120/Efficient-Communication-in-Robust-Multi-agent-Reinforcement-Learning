@@ -56,7 +56,7 @@ class NoiseGenerator:
         elif self.mode == 1:
             # Uniform bounded noise
             noise = T.rand_like(x)-0.5
-            return T.tensor(x+2*self.bound*noise)
+            return (x+2*self.bound*noise)
             # for i,xi in enumerate(x):
             #     noise[i] = np.clip(np.add(np.random.uniform(self.bound, self.minbound, self.shape),np.asarray(xi)),
             #                        self.low,self.high)if np.random.uniform() > self.p_uniform else xi

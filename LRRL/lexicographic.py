@@ -1,5 +1,6 @@
 import torch as T    
 import collections
+import numpy as np
 
 class LexicographicWeights():
     def __init__(self, noise):
@@ -25,7 +26,7 @@ class LexicographicWeights():
     def update_lagrange(self, recent_losses):
         # Save relevant loss information for updating Lagrange parameters
         for i in range(self.n_labdas):
-            self.j[i] = recent_losses.mean()
+            self.j[i] = -T.tensor(recent_losses[i]).mean()
         # Update Lagrange parameters
         for i in range(self.n_labdas):
             self.labda[i] += self.eta[i] * (self.j[i] - self.vareps*self.j[i] - recent_losses[i][-1])
@@ -47,5 +48,7 @@ class LexicographicWeights():
 
         loss = self.coeff*0.5 * (actions.detach()-target).pow(2).mean()
         self.coeff = min([1,self.coeff*1.0001])
+        
+        loss = np.clip(loss.detach().cpu().numpy(),-self.loss_bound,self.loss_bound)
 
-        return T.clip(loss,-self.loss_bound,self.loss_bound)
+        return loss

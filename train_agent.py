@@ -9,7 +9,7 @@ from utils import obs_list_to_state_vector, HyperParameters
 
 
 class Train:
-    def __init__(self, scenario):
+    def __init__(self, scenario, chkpt_dir='MADDPG/trained_nets/regular/'):
         self.par = HyperParameters()
 
         self.env = make_env(scenario)
@@ -47,7 +47,7 @@ class Train:
         self.maddpg_agents = MADDPG(actor_dims, critic_dims, self.n_agents, self.n_actions, 
                             self.par.noise_mode, scenario=scenario, lr_actor=0.01, lr_critic=0.01,   
                             fc1=64, fc2=64, gamma=self.par.gamma,
-                            tau=self.par.tau, chkpt_dir='MADDPG/tmp/')
+                            tau=self.par.tau, chkpt_dir=chkpt_dir)
 
         self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
