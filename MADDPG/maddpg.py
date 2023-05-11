@@ -27,10 +27,10 @@ class MADDPG:
             if i in load_mask:
                 agent.load_models()
 
-    def choose_action(self, raw_obs, eps, ratio, decreasing_eps):
+    def choose_action(self, raw_obs, greedy, eps, ratio, decreasing_eps):
         actions = []
         for agent_idx, agent in enumerate(self.agents):
-            action = agent.choose_action(raw_obs[agent_idx], eps, ratio, decreasing_eps)
+            action = agent.choose_action(raw_obs[agent_idx], greedy, eps, ratio, decreasing_eps)
             actions.append(action)
         return actions
     

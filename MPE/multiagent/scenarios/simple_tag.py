@@ -20,9 +20,9 @@ class Scenario(BaseScenario):
             agent.silent = True
             agent.adversary = True if i < num_adversaries else False
             agent.size = 0.075 if agent.adversary else 0.05
-            agent.accel = 3.0 if agent.adversary else 4.0
+            agent.accel = 3.0 if agent.adversary else 3.5
             #agent.accel = 20.0 if agent.adversary else 25.0
-            agent.max_speed = 1.0 if agent.adversary else 1.3
+            agent.max_speed = 1.0 if agent.adversary else 1.15
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
@@ -81,9 +81,9 @@ class Scenario(BaseScenario):
         return [agent for agent in world.agents if agent.adversary]
 
 
-    def reward(self, agent, world):
+    def reward(self, agent, world, reward_mode):
         # Agents are rewarded based on minimum agent distance to each landmark
-        main_reward = self.adversary_reward(agent, world) if agent.adversary else self.agent_reward(agent, world)
+        main_reward = self.adversary_reward(agent, world, reward_mode) if agent.adversary else self.agent_reward(agent, world)
         return main_reward
 
     def agent_reward(self, agent, world):
@@ -114,8 +114,10 @@ class Scenario(BaseScenario):
 
         return rew
 
-    def adversary_reward(self, agent, world):
+    def adversary_reward(self, agent, world, reward_mode):
         # Adversaries are rewarded for collisions with agents
+        if reward_mode==None:
+            reward_mode=4
         rew = 0
         shape = True
         agents = self.good_agents(world)
@@ -124,10 +126,13 @@ class Scenario(BaseScenario):
             dist = []
             for adv in adversaries:
                 dist.append(min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents]))
-            rew += -0.5*sum(dist)
-            while len(dist)>2: # This will get the distance of the two closest adversaries to agents
-                dist.remove(max(dist)) 
-            rew += -abs(dist[0]-dist[1]) # We want to minimize the difference in distance, i.e. the two adversaries to the agent should be at the same distance from the agents
+            rew += -sum(dist)
+            
+            if reward_mode>=2:
+                while len(dist)>2: # This will get the distance of the two closest adversaries to agents
+                    dist.remove(max(dist)) 
+                rew += -max((0.5-2*min(dist)), 0)*abs(dist[0]-dist[1]) # We want to minimize the difference in distance, i.e. the two adversaries to the agent should be at the same distance from the agents
+        
         if agent.collide:
             collision = 0
 
@@ -135,15 +140,21 @@ class Scenario(BaseScenario):
                 for ag in agents: 
                     if self.is_collision(ag, adv):
                         collision += 1
-                        rew += 2
+                        if reward_mode<=1:
+                            rew += 10 # minus the distance of the second closest one??
+                        else:
+                            rew += 10-5*max(dist)
                 for adv2 in adversaries:
                     if adv==adv2:
                         pass
                     else:
-                        if self.is_collision(adv, adv2):
-                            rew += -1
-            if collision > 1:
+                        if self.is_collision(adv, adv2) and reward_mode>=5:
+                            rew += -0
+            if collision > 1 and reward_mode>=2:
+                # print("double tag detected")
                 rew += 100 
+                # if collision>2:
+                #     rew += 500
         return rew
     
 
@@ -172,3 +183,5 @@ class Scenario(BaseScenario):
             if not other.adversary:
                 other_vel.append(other.state.p_vel)
         return np.concatenate([agent.state.p_vel] + [agent.state.p_pos] + entity_pos + other_pos + other_vel)
+
+

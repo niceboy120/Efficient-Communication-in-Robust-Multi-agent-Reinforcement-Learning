@@ -77,7 +77,7 @@ class MultiAgentEnv(gym.Env):
             self.viewers = [None] * self.n
         self._reset_render()
 
-    def step(self, action_n):
+    def step(self, action_n, reward_mode):
         obs_n = []
         reward_n = []
         done_n = []
@@ -91,7 +91,7 @@ class MultiAgentEnv(gym.Env):
         # record observation for each agent
         for agent in self.agents:
             obs_n.append(self._get_obs(agent))
-            reward_n.append(self._get_reward(agent))
+            reward_n.append(self._get_reward(agent, reward_mode))
             done_n.append(self._get_done(agent))
 
             info_n['n'].append(self._get_info(agent))
@@ -135,10 +135,13 @@ class MultiAgentEnv(gym.Env):
         return self.done_callback(agent, self.world)
 
     # get reward for a particular agent
-    def _get_reward(self, agent):
+    def _get_reward(self, agent, reward_mode=None):
         if self.reward_callback is None:
             return 0.0
-        return self.reward_callback(agent, self.world)
+        if reward_mode==None:
+            return self.reward_callback(agent, self.world)
+        else:
+            return self.reward_callback(agent, self.world, reward_mode)
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
@@ -210,7 +213,7 @@ class MultiAgentEnv(gym.Env):
                     else:
                         word = alphabet[np.argmax(other.state.c)]
                     message += (other.name + ' to ' + agent.name + ': ' + word + '   ')
-            print(message)
+            # print(message)
 
         for i in range(len(self.viewers)):
             # create viewers (if necessary)

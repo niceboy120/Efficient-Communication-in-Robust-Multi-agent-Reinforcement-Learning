@@ -25,18 +25,23 @@ class Agent:
 
         self.update_network_parameters(tau=1)
 
-    def choose_action(self, observation, eps, ratio, decreasing_eps):
-        if decreasing_eps:
-            eps = (1-ratio)*eps
+    def choose_action(self, observation, greedy, eps, ratio, decreasing_eps):
+        if greedy:
+            if decreasing_eps:
+                eps = (1-ratio)*eps
+
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
         actions = self.actor.forward(state)
         noise = T.rand(self.n_actions).to(self.actor.device)
-        if random.uniform(0,1)>eps:
-            action = actions.detach().cpu().numpy()[0]
-        else:
-            action = noise.detach().cpu().numpy()
 
-        return action
+        if greedy:
+            if random.uniform(0,1)>eps:
+                action = actions
+            else:
+                action = 5*noise
+        else:
+            action = actions + noise
+        return action.detach().cpu().numpy()[0]
     
     def eval_choose_action(self, observation):
         state = T.tensor([observation], dtype=T.float).to(self.target_actor.device)

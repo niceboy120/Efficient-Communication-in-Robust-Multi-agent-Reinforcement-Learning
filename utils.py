@@ -5,9 +5,9 @@ class HyperParameters:
         self.N_games = 10000
         self.N_games_edi = 2000
         self.N_games_test = 2000
-        self.print_interval = 100
+        self.print_interval = 500
         self.max_steps = 50
-        self.eps = 0.1
+        self.eps = 0.9
         self.gamma_batch_size = 32
         self.gamma = 0.99
         self.tau = 0.01

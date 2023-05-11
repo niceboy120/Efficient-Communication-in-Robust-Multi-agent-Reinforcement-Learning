@@ -4,12 +4,10 @@ import pickle
 import matplotlib.pyplot as plt
 
 
-# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True, N_games=None):
-# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False, N_games=Nones):
-
+# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4)
+# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4)
 
 alpha = [0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
-
 
 if __name__ == '__main__':
     stop = 0
@@ -21,26 +19,39 @@ if __name__ == '__main__':
         try:
             train_agents = Train('simple_tag')
 
-            # Training maddpg agents
-            history = []
-            for i in range(2,10):
-                if i==0:
-                    history_session = train_agents.training(load=False)
-                elif i==1:
-                    history_session = train_agents.training(load=True, load_adversaries=False)
-                else: 
-                    history_session = train_agents.training()
+            # # Training maddpg agents
+            # history_adv = []
+            # history_ag = []
+            # for i in range(8):
+            #     train_agents = Train('simple_tag')
+            #     if i==1:
+            #         history_session = train_agents.training(load=False, reward_mode=1)
+            #     elif i in [2,3]:
+            #         history_session = train_agents.training(load=True, reward_mode=1)
+            #     else:
+            #         history_session = train_agents.training(load=True, reward_mode=2)
 
-                for j in range(len(history_session)):
-                    history.append(history_session[j][0])
+            #     for j in range(len(history_session)):
+            #         history_adv.append(history_session[j][0])
+            #         history_ag.append(history_session[j][1])
 
-                # train_agents.testing(N_games = 5)
+            #     train_agents.clear_buffer()
+            #     # train_agents.testing(N_games = 10)
                     
-            with open('results_convergence.pickle', 'wb+') as f:
-                pickle.dump([history], f)
+            # with open('results_convergence.pickle', 'wb+') as f:
+            #     pickle.dump([history_adv, history_ag], f)
 
+
+
+
+
+            # train_agents.training(load = False, reward_mode=1)
+            # train_agents.training(load = True, reward_mode=1)
+            # train_agents.training(load = True, reward_mode=1)
+            # train_agents.training(load = True, reward_mode=2)
+            # train_agents.training(load = True, reward_mode=2)
             # Testing agents
-            # train_agents.testing()
+            train_agents.testing()
 
 
             # Training gammanets for different alphas
@@ -80,6 +91,8 @@ if __name__ == '__main__':
             print("Paused, hit ENTER to continue, type q to quit.")
             response = input()
             if response == 'q':
+                # with open('interrupted_results.pickle', 'wb+') as f:
+                #     pickle.dump(history,f)
                 break
             else:
                 print('Resuming...')
@@ -93,7 +106,19 @@ if __name__ == '__main__':
 
 
 
+""" 
+To Dos:
+- change alpha to zeta
+- make a config file/class in utils
+- implement a convergence check
+    - For reward mode 1 maybe for all adversaries the average distance to the target
+    - For reward mode 2 maybe if multiple episodes in a row have had double tags
+- merge with main and lexicographic
+- Do the thing that the output pickle file does not get overwritten everytime but maybe add to it?
 
+Need to find a way to encourage the second one to catch up without penalizing the first one for going forward
+
+"""
 
 
 

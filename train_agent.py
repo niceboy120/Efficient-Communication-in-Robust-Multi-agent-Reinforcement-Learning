@@ -56,7 +56,7 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, decreasing_eps, N_games):
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode):
         self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size)
 
         total_steps = 0
@@ -101,8 +101,8 @@ class Train:
                 else:
                     communications += len(self.cooperating_agents_mask)#*(len(self.cooperating_agents_mask)-1)
 
-                actions = self.maddpg_agents.choose_action(obs, self.par.eps, i/N_games, decreasing_eps)
-                obs_, reward, done, info = self.env.step(actions)
+                actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps)
+                obs_, reward, done, info = self.env.step(actions, reward_mode)
 
                 state = obs_list_to_state_vector(obs)
                 state_ = obs_list_to_state_vector(obs_)
@@ -152,25 +152,25 @@ class Train:
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, decreasing_eps=True, N_games=None):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, decreasing_eps, N_games)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode)
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, decreasing_eps=False, N_games=None):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, decreasing_eps, N_games)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode)
         return history
 
 
@@ -256,4 +256,7 @@ class Train:
 
         return obs, last_comm, communications
     
+
+    def clear_buffer(self):
+        self.memory.init_actor_memory()
 
