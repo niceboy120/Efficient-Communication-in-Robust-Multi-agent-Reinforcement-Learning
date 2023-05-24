@@ -66,7 +66,7 @@ class DataSet:
         for i in cooperating_agents_mask: #agent_idx, agent in enumerate(self.agents.agents):
             agent = self.agents.agents[i]        
             device = self.agents.agents[i].target_critic.device
-            Q = agent.target_critic.forward(T.tensor([obs_list_to_state_vector(state)], dtype=T.float).to(device), mu).flatten()
+            Q = agent.target_critic.forward(T.tensor(np.array([obs_list_to_state_vector(state)]), dtype=T.float32).to(device), mu).flatten()
             Q_all.append(Q.detach().cpu().numpy()[0])
         
         # We only need the Q values for the cooperating agents
@@ -79,7 +79,7 @@ class DataSet:
         # Loop through agents and get optimal actions for state_mu
         for agent_idx, agent in enumerate(self.agents.agents):
             device = self.agents.agents[agent_idx].target_actor.device
-            agent_state_mu = T.tensor([state_mu[agent_idx]], dtype=T.float).to(device)
+            agent_state_mu = T.tensor(np.array([state_mu[agent_idx]]), dtype=T.float32).to(device)
 
             action = agent.target_actor.forward(agent_state_mu)
             actions.append(action)

@@ -9,8 +9,9 @@ from utils import obs_list_to_state_vector, HyperParameters
 
 
 class Train:
-    def __init__(self, scenario, chkpt_dir='MADDPG/trained_nets/regular/'):
+    def __init__(self, scenario, chkpt_dir='/trained_nets/regular/'):
         self.par = HyperParameters()
+        self.chkpt_dir = chkpt_dir
 
         self.env = make_env(scenario)
         self.n_agents = self.env.n
@@ -47,7 +48,7 @@ class Train:
         self.maddpg_agents = MADDPG(actor_dims, critic_dims, self.n_agents, self.n_actions, 
                             self.par.noise_mode, scenario=scenario, lr_actor=0.01, lr_critic=0.01,   
                             fc1=64, fc2=64, gamma=self.par.gamma,
-                            tau=self.par.tau, chkpt_dir=chkpt_dir)
+                            tau=self.par.tau, chkpt_dir='MADDPG'+chkpt_dir)
 
         self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
@@ -57,7 +58,7 @@ class Train:
 
 
     def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode, lexi_mode):
-        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size)
+        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
 
         total_steps = 0
         history = [] # Score adversaries, score good agents, communications of cooperating agents when applicable
@@ -77,6 +78,19 @@ class Train:
                     N_games = self.par.N_games
 
         for i in range(N_games):
+            if lexi_mode and i>self.par.lexi_activate_episode_threshold:
+                lexi_mode_active = True
+            elif lexi_mode and edi_mode:
+                lexi_mode_active = True
+            else:
+                lexi_mode_active = False
+
+            if i%self.par.reward_mode_add_interval==0:
+                reward_mode += 1
+
+            if i%self.par.replay_buffer_reset_interval==0:
+                self.clear_buffer()
+
             obs = self.env.reset()
             if edi_mode=='test':
                 last_comm = []
@@ -113,7 +127,8 @@ class Train:
                 if not is_testing:
                     self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
                     if total_steps % 100 == 0:
-                        self.maddpg_agents.learn(self.memory, lexi_mode)
+                        self.maddpg_agents.learn(self.memory, lexi_mode_active, i/N_games)
+                        self.maddpg_agents.clear_cache()
 
                 obs = obs_
                 episode_sequence.append(obs)
@@ -152,7 +167,7 @@ class Train:
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4, lexi_mode=False):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=1, lexi_mode=False):
         if edi_mode=='disabled':
             edi_load = False
 
@@ -163,7 +178,7 @@ class Train:
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4, lexi_mode=False):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=1, lexi_mode=False):
         if edi_mode=='disabled':
             edi_load = False
 

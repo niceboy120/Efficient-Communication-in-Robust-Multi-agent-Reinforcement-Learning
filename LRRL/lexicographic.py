@@ -42,13 +42,13 @@ class LexicographicWeights():
         first_order_weights = T.tensor(first_order)
         return first_order_weights
 
-    def robust_loss(self, states, actions, agent):
+    def robust_loss(self, states, actions, agent, device):
         disturbed = self.noise.nu(states)
         target = agent.actor.forward(disturbed)
 
-        loss = self.coeff*0.5 * (actions.detach()-target).pow(2).mean()
-        self.coeff = min([1,self.coeff*1.0001])
+        loss = 0.5 * (actions.detach()-target.detach()).pow(2).mean()
+        # self.coeff = min([1,self.coeff*1.0001])
         
-        loss = np.clip(loss.detach().cpu().numpy(),-self.loss_bound,self.loss_bound)
+        loss = T.clip(loss,-self.loss_bound, self.loss_bound)
 
         return loss

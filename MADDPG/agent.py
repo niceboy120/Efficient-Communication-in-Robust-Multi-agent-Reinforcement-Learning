@@ -1,4 +1,5 @@
 import torch as T
+import numpy as np
 from MADDPG.networks import ActorNetwork, CriticNetwork
 import random
 from LRRL.lexicographic import LexicographicWeights
@@ -37,7 +38,7 @@ class Agent:
             if decreasing_eps:
                 eps = (1-ratio)*eps
 
-        state = T.tensor([observation], dtype=T.float).to(self.actor.device)
+        state = T.tensor(np.array([observation]), dtype=T.float32).to(self.actor.device)
         actions = self.actor.forward(state)
         noise = T.rand(self.n_actions).to(self.actor.device)
 
@@ -51,7 +52,7 @@ class Agent:
         return action.detach().cpu().numpy()[0]
     
     def eval_choose_action(self, observation):
-        state = T.tensor([observation], dtype=T.float).to(self.target_actor.device)
+        state = T.tensor([observation], dtype=T.float32).to(self.target_actor.device)
         actions = self.target_actor.forward(state)
 
         return actions.detach().cpu().numpy()[0]
