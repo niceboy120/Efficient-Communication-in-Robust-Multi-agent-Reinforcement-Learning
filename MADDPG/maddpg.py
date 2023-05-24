@@ -1,5 +1,5 @@
 import torch as T
-T.autograd.set_detect_anomaly(True)
+# T.autograd.set_detect_anomaly(True)
 import torch.nn.functional as F
 from torch.cuda.amp import autocast, GradScaler
 import numpy as np
@@ -48,7 +48,7 @@ class MADDPG:
     def clear_cache(self):
         T.cuda.empty_cache()
 
-    def learn(self, memory, lexi_mode, ratio):
+    def learn(self, memory, lexi_mode, ratio, robust_actor_loss):
         if not memory.ready():
             return
 
@@ -108,7 +108,7 @@ class MADDPG:
             actor_loss = -T.mean(actor_loss)
 
             if lexi_mode:
-                robust_loss = agent.lexicographic_weights.robust_loss(T.tensor(actor_states[agent_idx], dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent, device)
+                robust_loss = agent.lexicographic_weights.robust_loss(T.tensor(actor_states[agent_idx], dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent, device, robust_actor_loss)
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
                 
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())

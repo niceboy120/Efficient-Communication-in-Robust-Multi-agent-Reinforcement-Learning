@@ -95,8 +95,8 @@ class World(object):
         # physical damping
         self.damping = 0.25
         # contact response parameters
-        self.contact_force = 1e+2
-        self.contact_margin = 1e-3
+        self.contact_force = 2e+2
+        self.contact_margin = 2e-3
 
     # return all entities in the world
     @property
@@ -168,6 +168,18 @@ class World(object):
                                                                   np.square(entity.state.p_vel[1])) * entity.max_speed
             entity.state.p_pos += entity.state.p_vel * self.dt
 
+            def bound(x):
+                if x < 0.9 and x > -0.9:
+                    return x
+                elif x >= 0.9:
+                    return 0.9
+                elif x <= -0.9:
+                    return -0.9
+                
+            for p in range(self.dim_p):
+                entity.state.p_pos[p] = bound(entity.state.p_pos[p])
+
+
     def update_agent_state(self, agent):
         # set communication state (directly for now)
         if agent.silent:
@@ -190,7 +202,12 @@ class World(object):
         # softmax penetration
         k = self.contact_margin
         penetration = np.logaddexp(0, -(dist - dist_min)/k)*k
-        force = self.contact_force * delta_pos / dist * penetration
+
+        if dist != 0 and not np.isnan(delta_pos.any()) and not np.isnan(penetration):
+            force = self.contact_force * delta_pos / dist * penetration
+        else:
+            force = 0  
+
         force_a = +force if entity_a.movable else None
         force_b = -force if entity_b.movable else None
         return [force_a, force_b]
