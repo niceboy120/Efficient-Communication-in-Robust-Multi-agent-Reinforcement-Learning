@@ -48,7 +48,7 @@ class MADDPG:
     def clear_cache(self):
         T.cuda.empty_cache()
 
-    def learn(self, memory, lexi_mode, ratio, robust_actor_loss):
+    def learn(self, memory, lexi_mode, ratio, robust_actor_loss, writer=None, i=None):
         if not memory.ready():
             return
 
@@ -110,6 +110,10 @@ class MADDPG:
             if lexi_mode:
                 robust_loss = agent.lexicographic_weights.robust_loss(T.tensor(actor_states[agent_idx], dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent, device, robust_actor_loss)
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
+
+                if writer is not None:
+                    writer.add_scalar("robustness loss", robust_loss, i)
+                    writer.add_scalar("policy loss", actor_loss, i)
                 
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())

@@ -8,6 +8,7 @@ scipy==1.10.1
 sklearn==0.0
 torch==2.0.1
 tensorboard
+matplotlib
 
 
 

@@ -145,17 +145,19 @@ class Scenario(BaseScenario):
         for adv in adversaries:
             for ag in agents: 
                 if self.is_collision(ag, adv):
-                    if reward_mode == 2:
+                    if reward_mode==2:
                         rew += 10
-                    if reward_mode==3:
+                    elif reward_mode==3:
                         rew += 10 - 10*max(dist)
+                    elif reward_mode==4:
+                        rew += 10
                     collision += 1
                     collisions[0] += 1
             for adv2 in adversaries:
                 if adv==adv2:
                     pass
                 else:
-                    if self.is_collision(adv, adv2) and reward_mode>=2:
+                    if self.is_collision(adv, adv2) and reward_mode>=4:
                         rew += -1
         if collision > 1:
             rew += 100 

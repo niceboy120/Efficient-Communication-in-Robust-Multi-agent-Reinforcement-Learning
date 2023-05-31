@@ -46,7 +46,7 @@ class LexicographicWeights():
         disturbed = self.noise.nu(states)
         disturbed_actions = agent.actor.forward(disturbed)
 
-        if robust_loss_actor: 
+        if robust_actor_loss: 
             loss = 0.5 * (actions.detach()-disturbed_actions.detach()).pow(2).mean()
         else:
             Q = agent.critic.forward(states, actions)
