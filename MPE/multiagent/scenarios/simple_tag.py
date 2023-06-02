@@ -150,7 +150,7 @@ class Scenario(BaseScenario):
                     elif reward_mode==3:
                         rew += 10 - 10*max(dist)
                     elif reward_mode==4:
-                        rew += 10
+                        rew += 20
                     collision += 1
                     collisions[0] += 1
             for adv2 in adversaries:
@@ -158,9 +158,9 @@ class Scenario(BaseScenario):
                     pass
                 else:
                     if self.is_collision(adv, adv2) and reward_mode>=4:
-                        rew += -1
+                        rew += -0.5
         if collision > 1:
-            rew += 100 
+            rew += 200 
             collisions[1] += 1
             if collision>2:
                 rew += 500

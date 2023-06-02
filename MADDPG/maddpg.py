@@ -45,6 +45,13 @@ class MADDPG:
             actions.append(action)
         return actions
     
+    def eval_choose_action_noisy(self, raw_obs):
+        actions = []
+        for agent_idx, agent in enumerate(self.agents):
+            action = agent.eval_choose_action_noisy(raw_obs[agent_idx])
+            actions.append(action)
+        return actions
+    
     def clear_cache(self):
         T.cuda.empty_cache()
 

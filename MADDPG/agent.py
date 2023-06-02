@@ -36,7 +36,7 @@ class Agent:
     def choose_action(self, observation, greedy, eps, ratio, decreasing_eps):
         if greedy:
             if decreasing_eps:
-                eps = (1-ratio)*eps
+                eps = (1-ratio)*eps + (1-eps)
 
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.actor.device)
         actions = self.actor.forward(state)
@@ -46,7 +46,7 @@ class Agent:
             if random.uniform(0,1)>eps:
                 action = actions
             else:
-                action = 5*noise
+                action = 0*actions+noise
         else:
             action = actions + noise
         return action.detach().cpu().numpy()[0]
@@ -54,6 +54,13 @@ class Agent:
     def eval_choose_action(self, observation):
         state = T.tensor([observation], dtype=T.float32).to(self.target_actor.device)
         actions = self.target_actor.forward(state)
+
+        return actions.detach().cpu().numpy()[0]
+    
+    def eval_choose_action_noisy(self, observation):
+        state = T.tensor([observation], dtype=T.float32).to(self.target_actor.device)
+        disturbed = self.noise.nu(state)
+        actions = self.target_actor.forward(disturbed)
 
         return actions.detach().cpu().numpy()[0]
 

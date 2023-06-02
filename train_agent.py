@@ -91,7 +91,7 @@ class Train:
             else:
                 lexi_mode_active = False
 
-            if i%self.par.reward_mode_add_interval==0:
+            if i%self.par.reward_mode_add_interval==0 and i!=0:
                 reward_mode += 1
 
             # if i%self.par.replay_buffer_reset_interval==0:

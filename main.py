@@ -22,8 +22,8 @@ if __name__ == '__main__':
             # train_agents_regular.testing()
             # train_agents_LRRL.testing()
 
-            # # Training maddpg agents
-            # history_regular = train_agents_regular.training(load=False, reward_mode=2, lexi_mode=False, log=True)
+            # Training maddpg agents
+            history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, reward_mode=4, lexi_mode=False, log=True)
             # history_LRRL = train_agents_LRRL.training(load=False, reward_mode=2, lexi_mode=True, log=True)
 
                     
@@ -38,30 +38,30 @@ if __name__ == '__main__':
             #     train_agents_regular.training(edi_mode='train', edi_load=False, alpha=a, reward_mode=2, lexi_mode=False)
             #     train_agents_LRRL.training(edi_mode='train', edi_load=False, alpha=a, reward_mode=2, lexi_mode=True)
 
-            # Testing with EDI disabled
-            history = train_agents_regular.testing(edi_mode='disabled', render=False, reward_mode=2, lexi_mode=False)
-            mean_regular = np.mean(history, axis=0)
-            std_regular = np.std(history, axis=0)
+            # # Testing with EDI disabled
+            # history = train_agents_regular.testing(edi_mode='disabled', render=False, reward_mode=2, lexi_mode=False)
+            # mean_regular = np.mean(history, axis=0)
+            # std_regular = np.std(history, axis=0)
 
-            history = train_agents_LRRL.testing(edi_mode='disabled', render=False, reward_mode=2, lexi_mode=True)
-            mean_LRRL = np.mean(history, axis=0)
-            std_LRRL = np.std(history, axis=0)
+            # history = train_agents_LRRL.testing(edi_mode='disabled', render=False, reward_mode=2, lexi_mode=True)
+            # mean_LRRL = np.mean(history, axis=0)
+            # std_LRRL = np.std(history, axis=0)
 
-            # Testing EDI for different alphas
-            for a in alpha:
-                print("Testing with alpha = ", a)
-                history = train_agents_regular.testing(edi_mode='test', render=False, alpha=a, reward_mode=2, lexi_mode=False)
-                mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
-                std_regular = np.vstack((std_regular, np.std(history, axis=0)))
+            # # Testing EDI for different alphas
+            # for a in alpha:
+            #     print("Testing with alpha = ", a)
+            #     history = train_agents_regular.testing(edi_mode='test', render=False, alpha=a, reward_mode=2, lexi_mode=False)
+            #     mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
+            #     std_regular = np.vstack((std_regular, np.std(history, axis=0)))
 
-                history = train_agents_LRRL.testing(edi_mode='test', render=False, alpha=a, reward_mode=2, lexi_mode=True)
-                mean_LRRL = np.vstack((mean_LRRL, np.mean(history, axis=0)))
-                std_LRRL = np.vstack((std_LRRL, np.std(history, axis=0)))
+            #     history = train_agents_LRRL.testing(edi_mode='test', render=False, alpha=a, reward_mode=2, lexi_mode=True)
+            #     mean_LRRL = np.vstack((mean_LRRL, np.mean(history, axis=0)))
+            #     std_LRRL = np.vstack((std_LRRL, np.std(history, axis=0)))
 
-            # Dumping output
-            with open('results_edi.pickle', 'wb+') as f:
-                # pickle.dump([alpha, mean_regular, std_regular],f)
-                pickle.dump([alpha, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
+            # # Dumping output
+            # with open('results_edi.pickle', 'wb+') as f:
+            #     # pickle.dump([alpha, mean_regular, std_regular],f)
+            #     pickle.dump([alpha, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
 
 
             # Want to make it so it does not always overwrite the picle file. maybe add to it?
