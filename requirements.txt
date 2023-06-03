@@ -9,6 +9,8 @@ sklearn==0.0
 torch==2.0.1
 tensorboard
 matplotlib
+mpi4py
+
 
 
 
