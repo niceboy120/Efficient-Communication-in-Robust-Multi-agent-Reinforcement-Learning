@@ -120,10 +120,8 @@ class Scenario(BaseScenario):
 
         return rew, 0
 
-    def adversary_reward(self, agent, world, reward_mode):
+    def adversary_reward(self, agent, world, reward_mode=None):
         # Adversaries are rewarded for collisions with agents
-        if reward_mode==None:
-            reward_mode=1
         rew = 0
         shape = True
         agents = self.good_agents(world)
@@ -139,25 +137,19 @@ class Scenario(BaseScenario):
         
 
         collisions = [0,0,0]
-
         collision = 0
 
         for adv in adversaries:
             for ag in agents: 
                 if self.is_collision(ag, adv):
-                    if reward_mode==2:
-                        rew += 10
-                    elif reward_mode==3:
-                        rew += 10 - 10*max(dist)
-                    elif reward_mode==4:
-                        rew += 20
+                    rew += 20
                     collision += 1
                     collisions[0] += 1
             for adv2 in adversaries:
                 if adv==adv2:
                     pass
                 else:
-                    if self.is_collision(adv, adv2) and reward_mode>=4:
+                    if self.is_collision(adv, adv2):
                         rew += -0.5
         if collision > 1:
             rew += 200 

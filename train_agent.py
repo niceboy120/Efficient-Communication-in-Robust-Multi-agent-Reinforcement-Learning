@@ -59,7 +59,7 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode, lexi_mode, robust_actor_loss, log):
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log):
         print("\n", datetime.datetime.now())
 
         if log:
@@ -86,16 +86,10 @@ class Train:
         for i in range(N_games):
             if lexi_mode and i>self.par.lexi_activate_episode_threshold:
                 lexi_mode_active = True
-            elif lexi_mode and edi_mode:
+            elif lexi_mode and edi_mode!='disabled':
                 lexi_mode_active = True
             else:
                 lexi_mode_active = False
-
-            if i%self.par.reward_mode_add_interval==0 and i!=0:
-                reward_mode += 1
-
-            # if i%self.par.replay_buffer_reset_interval==0:
-            #     self.clear_buffer()
 
             obs = self.env.reset()
             if edi_mode=='test':
@@ -124,7 +118,7 @@ class Train:
                     communications += len(self.cooperating_agents_mask)#*(len(self.cooperating_agents_mask)-1)
 
                 actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps)
-                obs_, reward, done, info, n_tags = self.env.step(actions, reward_mode)
+                obs_, reward, done, info, n_tags = self.env.step(actions)
                 for k in range(len(n_tags)):
                     n_tags_ep[k] += n_tags[k]
 
@@ -197,25 +191,25 @@ class Train:
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=1, lexi_mode=False, robust_actor_loss=True, log=False):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode, lexi_mode, robust_actor_loss, log)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log)
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=1, lexi_mode=False, robust_actor_loss=True, log=False):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode, lexi_mode, robust_actor_loss, log)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log)
         return history
 
 

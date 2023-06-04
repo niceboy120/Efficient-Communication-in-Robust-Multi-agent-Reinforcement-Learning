@@ -77,7 +77,7 @@ class MultiAgentEnv(gym.Env):
             self.viewers = [None] * self.n
         self._reset_render()
 
-    def step(self, action_n, reward_mode):
+    def step(self, action_n, reward_mode=None):
         obs_n = []
         reward_n = []
         done_n = []
@@ -150,10 +150,7 @@ class MultiAgentEnv(gym.Env):
     def _get_reward(self, agent, reward_mode=None):
         if self.reward_callback is None:
             return 0.0
-        if reward_mode==None:
-            return self.reward_callback(agent, self.world)
-        else:
-            return self.reward_callback(agent, self.world, reward_mode)
+        return self.reward_callback(agent, self.world, reward_mode)
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):

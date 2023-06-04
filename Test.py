@@ -22,5 +22,10 @@
 # writer.flush()
 # writer.close()
 
-import datetime
-print("\n", datetime.datetime.now())
+# import datetime
+# print("\n", datetime.datetime.now())
+
+
+alpha = [6,4,9,4]
+for i, a in enumerate(alpha):
+    print(i,a)
