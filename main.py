@@ -19,13 +19,12 @@ if __name__ == '__main__':
         try:
             train_agents_regular = Train('simple_tag', chkpt_dir='/trained_nets/regular/')
             train_agents_LRRL = Train('simple_tag', chkpt_dir='/trained_nets/LRRL/')
-            # train_agents_regular.testing()
+            train_agents_regular.testing()
             # train_agents_LRRL.testing()
 
             # Training maddpg agents
             # history_regular = train_agents_regular.training(load=True, greedy=True, decreasing_eps=True, reward_mode=4, lexi_mode=False, log=True)
             # history_LRRL = train_agents_LRRL.training(load=False, reward_mode=2, lexi_mode=True, log=True)
-            train_agents_regular.testing()
                     
             # with open('results_convergence.pickle', 'wb+') as f:
             #     # pickle.dump([history_regular], f)

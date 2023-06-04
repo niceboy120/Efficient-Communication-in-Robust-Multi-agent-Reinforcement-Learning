@@ -61,7 +61,6 @@ class ActorNetwork(nn.Module):
         return pi
 
     def save_checkpoint(self):
-        print(self.chkpt_file)
         T.save(self.state_dict(), self.chkpt_file)
 
     def load_checkpoint(self):

@@ -165,7 +165,8 @@ class Train:
             avg = np.mean(history[-300:], axis=0)
             best = [max(els) for els in zip(best, avg[0:2])]
 
-            if i % self.par.print_interval == 0 and i > 0:
+
+            if (i % self.par.print_interval == 0 and i > 0) or is_testing:
                 if edi_mode=='test':
                     print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
@@ -175,12 +176,18 @@ class Train:
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
                             ', best score good agents: {:.1f}'.format(best[1]))
 
-        if edi_mode=='train':
-            self.gammanet.save()
+            if (i % self.par.autosave_interval == 0 and i > 0):
+                if not is_testing:
+                    self.maddpg_agents.save_checkpoint()
+                if edi_mode=='train':
+                    self.gammanet.save()
 
         if not is_testing:
             self.maddpg_agents.save_checkpoint()
+
+        if edi_mode=='train':
             self.gammanet.save()
+
 
         if log:
             self.writer.flush()

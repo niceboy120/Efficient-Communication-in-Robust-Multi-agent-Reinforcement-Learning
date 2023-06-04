@@ -8,7 +8,8 @@ class HyperParameters:
         self.reward_mode_add_interval = 10000000
         self.lexi_activate_episode_threshold = 30000
         self.replay_buffer_reset_interval = 10000
-        self.print_interval = 1
+        self.print_interval = 100
+        self.autosave_interval = 10000
         self.max_steps = 50
         self.eps = 0.9
         self.gamma_batch_size = 32
