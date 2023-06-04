@@ -1,16 +1,19 @@
 import numpy as np
 import time
+from torch.utils.tensorboard import SummaryWriter
 from MADDPG.maddpg import MADDPG
 from MADDPG.buffer import MultiAgentReplayBuffer
 from EDI.netutilities import NetUtilities
 from MPE.make_env import make_env
 from utils import obs_list_to_state_vector, HyperParameters
+import datetime
 
 
 
 class Train:
-    def __init__(self, scenario):
+    def __init__(self, scenario, chkpt_dir='/trained_nets/regular/'):
         self.par = HyperParameters()
+        self.chkpt_dir = chkpt_dir
 
         self.env = make_env(scenario)
         self.n_agents = self.env.n
@@ -45,19 +48,23 @@ class Train:
 
         self.n_actions = self.env.action_space[0].n
         self.maddpg_agents = MADDPG(actor_dims, critic_dims, self.n_agents, self.n_actions, 
-                            fc1=64, fc2=64,  
-                            lr_actor=0.01, lr_critic=0.01, scenario=scenario, gamma=self.par.gamma,
-                            tau=self.par.tau, chkpt_dir='MADDPG/tmp/')
+                            self.par.noise_mode, scenario=scenario, lr_actor=0.01, lr_critic=0.01,   
+                            fc1=64, fc2=64, gamma=self.par.gamma,
+                            tau=self.par.tau, chkpt_dir='MADDPG'+chkpt_dir)
 
-        self.memory = MultiAgentReplayBuffer(1000000, critic_dims, actor_dims, 
+        self.memory = MultiAgentReplayBuffer(100000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
         
         self.gamma_input_dims = self.env.observation_space[1].shape[0]
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode):
-        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size)
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log):
+        print("\n", datetime.datetime.now())
+
+        if log:
+            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
+            self.writer = SummaryWriter()
 
         total_steps = 0
         history = [] # Score adversaries, score good agents, communications of cooperating agents when applicable
@@ -77,6 +84,13 @@ class Train:
                     N_games = self.par.N_games
 
         for i in range(N_games):
+            if lexi_mode and i>self.par.lexi_activate_episode_threshold:
+                lexi_mode_active = True
+            elif lexi_mode and edi_mode!='disabled':
+                lexi_mode_active = True
+            else:
+                lexi_mode_active = False
+
             obs = self.env.reset()
             if edi_mode=='test':
                 last_comm = []
@@ -91,6 +105,8 @@ class Train:
             episode_sequence = []
             episode_sequence.append(obs)
 
+            n_tags_ep = [0,0,0]
+
             while not any(done):
                 if is_testing and render:
                     self.env.render()
@@ -102,7 +118,9 @@ class Train:
                     communications += len(self.cooperating_agents_mask)#*(len(self.cooperating_agents_mask)-1)
 
                 actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps)
-                obs_, reward, done, info = self.env.step(actions, reward_mode)
+                obs_, reward, done, info, n_tags = self.env.step(actions)
+                for k in range(len(n_tags)):
+                    n_tags_ep[k] += n_tags[k]
 
                 state = obs_list_to_state_vector(obs)
                 state_ = obs_list_to_state_vector(obs_)
@@ -113,7 +131,11 @@ class Train:
                 if not is_testing:
                     self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
                     if total_steps % 100 == 0:
-                        self.maddpg_agents.learn(self.memory)
+                        if log:
+                            self.maddpg_agents.learn(self.memory, lexi_mode_active, i/N_games, robust_actor_loss, self.writer, i)
+                        else:
+                            self.maddpg_agents.learn(self.memory, lexi_mode_active, i/N_games, robust_actor_loss)
+                        self.maddpg_agents.clear_cache()
 
                 obs = obs_
                 episode_sequence.append(obs)
@@ -125,12 +147,20 @@ class Train:
 
             if edi_mode=='train':
                 self.gammanet.learn(episode_sequence, self.cooperating_agents_mask)
-
+            
+            if log:
+                self.writer.add_scalar("score adversaries", score[0], i)
+                self.writer.add_scalar("score_agents", score[1], i)
+                self.writer.add_scalar("single tags", n_tags_ep[0], i)
+                self.writer.add_scalar("double tags", n_tags_ep[1], i)
+                self.writer.add_scalar("triple tags", n_tags_ep[2], i)
+                self.writer.add_scalar("communications", communications, i)
             history.append(score + [communications])
             avg = np.mean(history[-300:], axis=0)
             best = [max(els) for els in zip(best, avg[0:2])]
 
-            if i % self.par.print_interval == 0 and i > 0:
+
+            if (i % self.par.print_interval == 0 and i > 0) or is_testing:
                 if edi_mode=='test':
                     print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
@@ -140,37 +170,46 @@ class Train:
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
                             ', best score good agents: {:.1f}'.format(best[1]))
 
-        if edi_mode=='train':
-            self.gammanet.save()
+            if (i % self.par.autosave_interval == 0 and i > 0):
+                if not is_testing:
+                    self.maddpg_agents.save_checkpoint()
+                if edi_mode=='train':
+                    self.gammanet.save()
 
         if not is_testing:
             self.maddpg_agents.save_checkpoint()
+
+        if edi_mode=='train':
             self.gammanet.save()
 
+
+        if log:
+            self.writer.flush()
+            self.writer.close()
         return history
             
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log)
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log)
         return history
 
 

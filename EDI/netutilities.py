@@ -9,17 +9,17 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 class NetUtilities():
-    def __init__(self, agents, input_dims, alpha=0.0, batch_size = 32):
+    def __init__(self, agents, input_dims, alpha=0.0, batch_size = 32, chkpt_dir='/trained_nets/regular'):
         self.alpha = alpha
         self.batch_size = batch_size
         self.dataset = DataSet(agents, alpha=self.alpha)
-        self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet_'+str(self.alpha), chkpt_dir='EDI/tmp/')
+        self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet_'+str(self.alpha), chkpt_dir='EDI'+chkpt_dir)
 
     def get_gamma_from_net(self, x1, x2): # Getting Gamma from the network given two states
         device = self.gammanet.device
 
-        x1 = T.tensor([x1], dtype=T.float).to(device)
-        x2 = T.tensor([x2], dtype=T.float).to(device)
+        x1 = T.tensor(np.array([x1]), dtype=T.float32).to(device)
+        x2 = T.tensor(np.array([x2]), dtype=T.float32).to(device)
 
         gamma = self.gammanet.forward(x1, x2)
         return gamma.detach().cpu().numpy()[0][0]
@@ -36,7 +36,7 @@ class NetUtilities():
         inputs = [data [0:2]for data in io]
         targets = [data[2] for data in io]
 
-        dataset = TensorDataset(T.tensor(inputs, dtype = T.float).to(device), T.tensor(targets, dtype = T.float).to(device))
+        dataset = TensorDataset(T.tensor(np.array(inputs), dtype = T.float).to(device), T.tensor(targets, dtype = T.float).to(device))
 
         # Create DataLoader
         batch_size = self.batch_size

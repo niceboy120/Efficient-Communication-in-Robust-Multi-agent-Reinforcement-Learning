@@ -1,30 +1,31 @@
-# import numpy as np
+# import torch
+# from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter()
+
+# x = torch.arange(-5, 5, 0.1).view(-1, 1)
+# y = -5 * x + 0.1 * torch.randn(x.size())
+
+# model = torch.nn.Linear(1, 1)
+# criterion = torch.nn.MSELoss()
+# optimizer = torch.optim.SGD(model.parameters(), lr = 0.1)
+
+# def train_model(iter):
+#     for epoch in range(iter):
+#         y1 = model(x)
+#         loss = criterion(y1, y)
+#         writer.add_scalar("Loss/train", loss, epoch)
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
+
+# train_model(10)
+# writer.flush()
+# writer.close()
+
+# import datetime
+# print("\n", datetime.datetime.now())
 
 
-# def bound(x):
-#     if x < 0.8:
-#         return 0
-#     if x < 1.0:
-#         return (x - 0.8) * 100
-#     return min((20+(x-1)*15), 40)
-
-# x = np.linspace(0,5,1001)
-# print(x)
-
-# y = []
-
-# for i in range(len(x)):
-#     y.append(bound(x[i]))
-
-# import matplotlib.pyplot as plt
-
-# plt.plot(x,y)
-# plt.show()
-
-
-mask = [1,4,7, 11, 3, 67, 10]
-
-while len(mask)>2:
-    mask.remove(max(mask))
-
-print(mask)
+alpha = [6,4,9,4]
+for i, a in enumerate(alpha):
+    print(i,a)

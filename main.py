@@ -1,13 +1,12 @@
 from train_agent import Train
 import numpy as np
 import pickle
-import matplotlib.pyplot as plt
 
-
-# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4)
-# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4)
+# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True)
+# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True):
 
 alpha = [0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
+alpha = [0.1, 0.5, 1.0, 5.0, 10.0, 50.0]
 
 if __name__ == '__main__':
     stop = 0
@@ -17,63 +16,50 @@ if __name__ == '__main__':
             break
 
         try:
-            train_agents = Train('simple_tag')
+            train_agents_regular = Train('simple_tag', chkpt_dir='/trained_nets/regular/')
+            train_agents_LRRL = Train('simple_tag', chkpt_dir='/trained_nets/LRRL/')
+            # train_agents_regular.testing()
+            # train_agents_LRRL.testing()
 
-            # # Training maddpg agents
-            # history_adv = []
-            # history_ag = []
-            # for i in range(8):
-            #     train_agents = Train('simple_tag')
-            #     if i==1:
-            #         history_session = train_agents.training(load=False, reward_mode=1)
-            #     elif i in [2,3]:
-            #         history_session = train_agents.training(load=True, reward_mode=1)
-            #     else:
-            #         history_session = train_agents.training(load=True, reward_mode=2)
+            # Training maddpg agents
+            history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
+            history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, Lexi_mode=True, log=True)
 
-            #     for j in range(len(history_session)):
-            #         history_adv.append(history_session[j][0])
-            #         history_ag.append(history_session[j][1])
-
-            #     train_agents.clear_buffer()
-            #     # train_agents.testing(N_games = 10)
-                    
-            # with open('results_convergence.pickle', 'wb+') as f:
-            #     pickle.dump([history_adv, history_ag], f)
-
-
-
-
-
-            # train_agents.training(load = False, reward_mode=1)
-            # train_agents.training(load = True, reward_mode=1)
-            # train_agents.training(load = True, reward_mode=1)
-            # train_agents.training(load = True, reward_mode=2)
-            # train_agents.training(load = True, reward_mode=2)
-            # Testing agents
-            train_agents.testing()
+            with open('results_convergence.pickle', 'wb+') as f:
+                # pickle.dump([history_regular], f)
+                pickle.dump([history_regular, history_LRRL], f)
 
 
             # Training gammanets for different alphas
             for a in alpha:
                 print("Training with alpha = ", a)
-                train_agents.training(edi_mode='train', edi_load=False, alpha=a)
+                train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, alpha=a, lexi_mode=False)
+                train_agents_LRRL.testing(edi_mode='train', edi_load=False, render=False, alpha=a, lexi_mode=True)
 
             # Testing with EDI disabled
-            history = train_agents.testing(edi_mode='disabled', render=False)
-            mean = np.mean(history, axis=0)
-            std = np.std(history, axis=0)
+            history = train_agents_regular.testing(edi_mode='disabled', render=False, lexi_mode=False)
+            mean_regular = np.mean(history, axis=0)
+            std_regular = np.std(history, axis=0)
+
+            history = train_agents_LRRL.testing(edi_mode='disabled', render=False, lexi_mode=True)
+            mean_LRRL = np.mean(history, axis=0)
+            std_LRRL = np.std(history, axis=0)
 
             # Testing EDI for different alphas
             for a in alpha:
                 print("Testing with alpha = ", a)
-                history = train_agents.testing(edi_mode='test', render=False, alpha=a)
-                mean = np.vstack((mean, np.mean(history, axis=0)))
-                std = np.vstack((std, np.std(history, axis=0)))
+                history = train_agents_regular.testing(edi_mode='test', render=False, alpha=a, lexi_mode=False)
+                mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
+                std_regular = np.vstack((std_regular, np.std(history, axis=0)))
+
+                history = train_agents_LRRL.testing(edi_mode='test', render=False, alpha=a, lexi_mode=True)
+                mean_LRRL = np.vstack((mean_LRRL, np.mean(history, axis=0)))
+                std_LRRL = np.vstack((std_LRRL, np.std(history, axis=0)))
 
             # Dumping output
             with open('results_edi.pickle', 'wb+') as f:
-                pickle.dump([alpha, mean, std],f)
+                # pickle.dump([alpha, mean_regular, std_regular],f)
+                pickle.dump([alpha, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
 
 
             # Want to make it so it does not always overwrite the picle file. maybe add to it?
@@ -87,7 +73,8 @@ if __name__ == '__main__':
 
                 
         except KeyboardInterrupt:
-            train_agents.ask_save()
+            train_agents_regular.ask_save()
+            # train_agents_LRRL.ask_save()
             print("Paused, hit ENTER to continue, type q to quit.")
             response = input()
             if response == 'q':
@@ -113,11 +100,11 @@ To Dos:
 - implement a convergence check
     - For reward mode 1 maybe for all adversaries the average distance to the target
     - For reward mode 2 maybe if multiple episodes in a row have had double tags
-- merge with main and lexicographic
 - Do the thing that the output pickle file does not get overwritten everytime but maybe add to it?
 
 Need to find a way to encourage the second one to catch up without penalizing the first one for going forward
 
+Maybe don't do a full clear of the replay buffer but a first-in-first-out method with a fixed size might be better??? ALREADY BUILT IN, JUST MAKE THE BUFFER SIZE SMALLER!!
 """
 
 

@@ -1,5 +1,6 @@
 import os
 import torch as T
+T.autograd.set_detect_anomaly(True)
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -28,6 +29,7 @@ class CriticNetwork(nn.Module):
         return q
 
     def save_checkpoint(self):
+        print(self.chkpt_file)
         T.save(self.state_dict(), self.chkpt_file)
 
     def load_checkpoint(self):
@@ -53,7 +55,8 @@ class ActorNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        pi = T.softmax(self.pi(x), dim=1)
+        pi = self.pi(x)
+        pi = T.softmax(pi, dim=1)
 
         return pi
 

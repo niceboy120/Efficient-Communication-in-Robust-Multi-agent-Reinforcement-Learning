@@ -1,9 +1,12 @@
 import torch as T
+import numpy as np
 from MADDPG.networks import ActorNetwork, CriticNetwork
 import random
+from LRRL.lexicographic import LexicographicWeights
+from LRRL.noise_generator import NoiseGenerator
 
 class Agent:
-    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, chkpt_dir,
+    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, noise_mode, chkpt_dir,
                     lr_actor=0.01, lr_critic=0.01, fc1=64, 
                     fc2=64, gamma=0.95, tau=0.01):
         self.gamma = gamma
@@ -22,15 +25,20 @@ class Agent:
                                             fc1, fc2, n_agents, n_actions,
                                             chkpt_dir=chkpt_dir,
                                             name=self.agent_name+'_target_critic')
+        
 
+        self.noise = NoiseGenerator(mode = noise_mode)
+        self.lexicographic_weights = LexicographicWeights(self.noise)
+        self.recent_losses = self.lexicographic_weights.init_recent_losses()
+        
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation, greedy, eps, ratio, decreasing_eps):
         if greedy:
             if decreasing_eps:
-                eps = (1-ratio)*eps
+                eps = (1-ratio)*eps# + (1-eps)
 
-        state = T.tensor([observation], dtype=T.float).to(self.actor.device)
+        state = T.tensor(np.array([observation]), dtype=T.float32).to(self.actor.device)
         actions = self.actor.forward(state)
         noise = T.rand(self.n_actions).to(self.actor.device)
 
@@ -38,14 +46,21 @@ class Agent:
             if random.uniform(0,1)>eps:
                 action = actions
             else:
-                action = 5*noise
+                action = 0*actions+noise
         else:
             action = actions + noise
         return action.detach().cpu().numpy()[0]
     
     def eval_choose_action(self, observation):
-        state = T.tensor([observation], dtype=T.float).to(self.target_actor.device)
+        state = T.tensor([observation], dtype=T.float32).to(self.target_actor.device)
         actions = self.target_actor.forward(state)
+
+        return actions.detach().cpu().numpy()[0]
+    
+    def eval_choose_action_noisy(self, observation):
+        state = T.tensor([observation], dtype=T.float32).to(self.target_actor.device)
+        disturbed = self.noise.nu(state)
+        actions = self.target_actor.forward(disturbed)
 
         return actions.detach().cpu().numpy()[0]
 

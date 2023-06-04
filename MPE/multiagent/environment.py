@@ -77,7 +77,7 @@ class MultiAgentEnv(gym.Env):
             self.viewers = [None] * self.n
         self._reset_render()
 
-    def step(self, action_n, reward_mode):
+    def step(self, action_n, reward_mode=None):
         obs_n = []
         reward_n = []
         done_n = []
@@ -89,11 +89,23 @@ class MultiAgentEnv(gym.Env):
         # advance world state
         self.world.step()
         # record observation for each agent
-        for agent in self.agents:
-            obs_n.append(self._get_obs(agent))
-            reward_n.append(self._get_reward(agent, reward_mode))
-            done_n.append(self._get_done(agent))
+        advs = 0
 
+        for agent in self.agents:   
+            obs_n.append(self._get_obs(agent))
+
+            if agent.adversary:
+                if advs==0:
+                    out_rew_adv, out_col_adv = self._get_reward(agent, reward_mode)
+                    reward_n.append(out_rew_adv)
+                else:
+                    reward_n.append(out_rew_adv)
+                advs += 1
+            else:
+                out_rew, col = self._get_reward(agent, reward_mode)
+                reward_n.append(out_rew)           
+            
+            done_n.append(self._get_done(agent))
             info_n['n'].append(self._get_info(agent))
 
         # all agents get total reward in cooperative case
@@ -101,7 +113,7 @@ class MultiAgentEnv(gym.Env):
         if self.shared_reward:
             reward_n = [reward] * self.n
 
-        return obs_n, reward_n, done_n, info_n
+        return obs_n, reward_n, done_n, info_n, out_col_adv
 
     def reset(self):
         # reset world
@@ -138,10 +150,7 @@ class MultiAgentEnv(gym.Env):
     def _get_reward(self, agent, reward_mode=None):
         if self.reward_callback is None:
             return 0.0
-        if reward_mode==None:
-            return self.reward_callback(agent, self.world)
-        else:
-            return self.reward_callback(agent, self.world, reward_mode)
+        return self.reward_callback(agent, self.world, reward_mode)
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):

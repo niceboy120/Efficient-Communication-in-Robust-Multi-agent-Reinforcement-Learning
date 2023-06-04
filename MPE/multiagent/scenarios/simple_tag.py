@@ -1,4 +1,5 @@
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 from MPE.multiagent.core import World, Agent, Landmark
 from MPE.multiagent.scenario import BaseScenario
 
@@ -20,9 +21,9 @@ class Scenario(BaseScenario):
             agent.silent = True
             agent.adversary = True if i < num_adversaries else False
             agent.size = 0.075 if agent.adversary else 0.05
-            agent.accel = 3.0 if agent.adversary else 3.5
+            agent.accel = 3.0 if agent.adversary else 4
             #agent.accel = 20.0 if agent.adversary else 25.0
-            agent.max_speed = 1.0 if agent.adversary else 1.15
+            agent.max_speed = 1.0 if agent.adversary else 1.3
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
@@ -34,6 +35,7 @@ class Scenario(BaseScenario):
         # make initial conditions
         self.reset_world(world)
         return world
+
 
 
     def reset_world(self, world):
@@ -83,8 +85,12 @@ class Scenario(BaseScenario):
 
     def reward(self, agent, world, reward_mode):
         # Agents are rewarded based on minimum agent distance to each landmark
-        main_reward = self.adversary_reward(agent, world, reward_mode) if agent.adversary else self.agent_reward(agent, world)
-        return main_reward
+        if agent.adversary:
+            main_reward, collisions = self.adversary_reward(agent, world, reward_mode)  
+            return main_reward, collisions
+        else:
+            main_reward, collisions = self.agent_reward(agent, world)
+            return main_reward, collisions
 
     def agent_reward(self, agent, world):
         # Agents are negatively rewarded if caught by adversaries
@@ -112,12 +118,10 @@ class Scenario(BaseScenario):
             x = abs(agent.state.p_pos[p])
             rew -= bound(x)
 
-        return rew
+        return rew, 0
 
-    def adversary_reward(self, agent, world, reward_mode):
+    def adversary_reward(self, agent, world, reward_mode=None):
         # Adversaries are rewarded for collisions with agents
-        if reward_mode==None:
-            reward_mode=4
         rew = 0
         shape = True
         agents = self.good_agents(world)
@@ -127,44 +131,34 @@ class Scenario(BaseScenario):
             for adv in adversaries:
                 dist.append(min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents]))
             rew += -sum(dist)
-            
-            if reward_mode>=2:
-                while len(dist)>2: # This will get the distance of the two closest adversaries to agents
-                    dist.remove(max(dist)) 
-                rew += -max((0.5-2*min(dist)), 0)*abs(dist[0]-dist[1]) # We want to minimize the difference in distance, i.e. the two adversaries to the agent should be at the same distance from the agents
+
+        while len(dist)>2:
+            dist.remove(max(dist))
         
-        if agent.collide:
-            collision = 0
 
-            for adv in adversaries:
-                for ag in agents: 
-                    if self.is_collision(ag, adv):
-                        collision += 1
-                        if reward_mode<=1:
-                            rew += 10 # minus the distance of the second closest one??
-                        else:
-                            rew += 10-5*max(dist)
-                for adv2 in adversaries:
-                    if adv==adv2:
-                        pass
-                    else:
-                        if self.is_collision(adv, adv2) and reward_mode>=5:
-                            rew += -0
-            if collision > 1 and reward_mode>=2:
-                # print("double tag detected")
-                rew += 100 
-                # if collision>2:
-                #     rew += 500
-        return rew
-    
+        collisions = [0,0,0]
+        collision = 0
 
-    # def second_smallest(self, numbers):
-    #     from heapq import nsmallest
-    #     from itertools import filterfalse
-    #     s = set()
-    #     sa = s.add
-    #     un = (sa(n) or n for n in filterfalse(s.__contains__, numbers))
-    #     return nsmallest(2, un)[-1]
+        for adv in adversaries:
+            for ag in agents: 
+                if self.is_collision(ag, adv):
+                    rew += 20
+                    collision += 1
+                    collisions[0] += 1
+            for adv2 in adversaries:
+                if adv==adv2:
+                    pass
+                else:
+                    if self.is_collision(adv, adv2):
+                        rew += -0.5
+        if collision > 1:
+            rew += 200 
+            collisions[1] += 1
+            if collision>2:
+                rew += 500
+                collisions[2] += 1
+
+        return rew, collisions
 
     def observation(self, agent, world):
         # get positions of all entities in this agent's reference frame
