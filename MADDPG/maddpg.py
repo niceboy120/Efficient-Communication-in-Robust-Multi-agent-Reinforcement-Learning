@@ -115,7 +115,10 @@ class MADDPG:
             actor_loss = -T.mean(actor_loss)
 
             if lexi_mode:
-                robust_loss = agent.lexicographic_weights.robust_loss(T.tensor(actor_states[agent_idx], dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent, device, robust_actor_loss)
+                if robust_actor_loss:
+                    robust_loss = agent.lexicographic_weights.robust_loss_actor(T.tensor(np.array(actor_states[agent_idx]), dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent)
+                else:
+                    robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent)                
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
 
                 if writer is not None:
