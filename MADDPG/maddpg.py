@@ -115,6 +115,8 @@ class MADDPG:
             actor_loss = -T.mean(actor_loss)
 
             if lexi_mode:
+                w = agent.lexicographic_weights.compute_weights()
+
                 if robust_actor_loss:
                     robust_loss = agent.lexicographic_weights.robust_loss_actor(T.tensor(np.array(actor_states[agent_idx]), dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent)
                 else:
@@ -128,8 +130,7 @@ class MADDPG:
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())
                 agent.lexicographic_weights.update_lagrange(agent.recent_losses)
-                w = agent.lexicographic_weights.compute_weights()
-        
+                
                 loss = actor_loss + robust_loss*(w[1]/w[0])
             else:
                 loss = actor_loss

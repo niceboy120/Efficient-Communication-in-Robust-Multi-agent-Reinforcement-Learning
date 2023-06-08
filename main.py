@@ -2,11 +2,8 @@ from train_agent import Train
 import numpy as np
 import pickle
 
-# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True)
-# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True):
-
-alpha = [0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
-alpha = [0.1, 0.5, 1.0, 5.0, 10.0, 50.0]
+# def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, noisy=False)
+# def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, noisy=False)
 
 if __name__ == '__main__':
     stop = 0
@@ -23,18 +20,22 @@ if __name__ == '__main__':
 
             # Training maddpg agents
             history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
-            history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, Lexi_mode=True, log=True)
+            history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
 
-            with open('results_convergence.pickle', 'wb+') as f:
+            with open('results/results_convergence.pickle', 'wb+') as f:
                 # pickle.dump([history_regular], f)
                 pickle.dump([history_regular, history_LRRL], f)
 
+            # Testing the robustness
+            test_regular_noise = train_agents_regular.testing(render=False, noisy=True)
+            test_LRRL_noise = train_agents_LRRL.testing(render=False, noisy=True)
 
-            # Training gammanets for different alphas
-            for a in alpha:
-                print("Training with alpha = ", a)
-                train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, alpha=a, lexi_mode=False)
-                train_agents_LRRL.testing(edi_mode='train', edi_load=False, render=False, alpha=a, lexi_mode=True)
+            with open('results/results_noise_test.pickle', 'wb+') as f:
+                pickle.dump([test_regular_noise, test_LRRL_noise], f)
+
+            # Training gammanet
+            train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=False)
+            train_agents_LRRL.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=True)
 
             # Testing with EDI disabled
             history = train_agents_regular.testing(edi_mode='disabled', render=False, lexi_mode=False)
@@ -46,20 +47,21 @@ if __name__ == '__main__':
             std_LRRL = np.std(history, axis=0)
 
             # Testing EDI for different alphas
-            for a in alpha:
-                print("Testing with alpha = ", a)
-                history = train_agents_regular.testing(edi_mode='test', render=False, alpha=a, lexi_mode=False)
+            zeta = [1,10,100,500,1000]
+            for z in zeta:
+                print("Testing with zeta = ", z)
+                history = train_agents_regular.testing(edi_mode='test', render=False, zeta=z, lexi_mode=False)
                 mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
                 std_regular = np.vstack((std_regular, np.std(history, axis=0)))
 
-                history = train_agents_LRRL.testing(edi_mode='test', render=False, alpha=a, lexi_mode=True)
+                history = train_agents_LRRL.testing(edi_mode='test', render=False, zeta=z, lexi_mode=True)
                 mean_LRRL = np.vstack((mean_LRRL, np.mean(history, axis=0)))
                 std_LRRL = np.vstack((std_LRRL, np.std(history, axis=0)))
 
             # Dumping output
-            with open('results_edi.pickle', 'wb+') as f:
+            with open('results/results_edi.pickle', 'wb+') as f:
                 # pickle.dump([alpha, mean_regular, std_regular],f)
-                pickle.dump([alpha, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
+                pickle.dump([zeta, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
 
 
             # Want to make it so it does not always overwrite the picle file. maybe add to it?

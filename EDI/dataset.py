@@ -8,56 +8,24 @@ from EDI.network import GammaNet
 ## TO DO HERE: do the Q values sheit, check the structure of sequence to make sure the slicing is done correcly in len and gamma
 
 class DataSet:
-    def __init__(self, agents, alpha):
+    def __init__(self, agents):
         self.agents = agents
-        self.alpha = alpha
 
 
-    def calculate_IO(self, sequence, cooperating_agents_mask, min_length_sequence=20):
+    def calculate_IO(self, sequence, cooperating_agents_mask):
         I = len(sequence)-1
 
         io = []
-        gamma_cache = {}
-        for i in range(I-min_length_sequence):
-            # gamma = self.calculate_gamma(sequence[i:])
-            gamma = gamma_cache.get(i, self.calculate_gamma(sequence[i:], cooperating_agents_mask))
-            gamma_cache[i] = gamma
-            for j in range(I-i-1):
+        for i in range(I):
+            mu0 = self.get_mu(sequence[i])
+            for j in range(i+1, I+1):
+                gamma = sum(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask)) - sum(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
+
                 for l,k in enumerate(cooperating_agents_mask):
-                    io.append([sequence[i][k], sequence[i+j+1][k], gamma[l]])
-                # io_ij = np.column_stack([sequence[i][1:], sequence[i+j+1][1:], gamma])
-                # io.append(io_ij)
+                    io.append([sequence[i][k], sequence[j][k], gamma])
 
-        # One line of IO is a set of two observations of the same agent and their corresponding gamma
+        # One line of IO is a set of two observations of the same agent and their corresponding Qdiff/gamma
         return io
-
-    def calculate_gamma(self, sequence, cooperating_agents_mask):           
-        number_of_transitions = len(sequence)-1 # Need to know the number of transitions in the sequence
-
-        # Initialization
-        done = False
-        i = 1
-
-        mu0 = self.get_mu(sequence[0])
-
-        # Loop
-        while not done and i<= number_of_transitions:
-            if any(self.get_Q_values(sequence[i], mu0, cooperating_agents_mask) <= np.array(self.get_Q_values(sequence[i], self.get_mu(sequence[i]), cooperating_agents_mask))-self.alpha): 
-                # If for one of the cooperating agents the Q values differ too much, stop
-                done = True
-            else:
-                i += 1
-
-        # Calculate gamma as the norm between the states
-        # gamma = np.linalg.norm(self.concat_obs(sequence[0])-self.concat_obs(sequence[i-1]))
-
-        # gamma = []
-        # for k in range(1, self.agents.n_agents):
-        #     gamma.append(np.linalg.norm(sequence[0][k]-sequence[i-1][k]))
-
-        gamma = [np.linalg.norm(sequence[0][k]-sequence[i-1][k]) for k in cooperating_agents_mask]
-        return gamma
-
 
     def get_Q_values(self, state, mu, cooperating_agents_mask):
         Q_all = []

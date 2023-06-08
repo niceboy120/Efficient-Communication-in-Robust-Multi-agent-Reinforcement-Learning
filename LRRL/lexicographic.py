@@ -46,8 +46,9 @@ class LexicographicWeights():
         disturbed = self.noise.nu(states)
         disturbed_actions = agent.actor.forward(disturbed)
 
-        loss = 0.5 * (actions.detach()-disturbed_actions.detach()).pow(2).mean()
-
+        loss = 0.5 * (actions.detach()-disturbed_actions).pow(2).mean()
+        
+        # loss = self.coeff*loss     
         # self.coeff = min([1,self.coeff*1.0001])
         loss = T.clip(loss,-self.loss_bound, self.loss_bound)
 
@@ -60,8 +61,9 @@ class LexicographicWeights():
 
         Q = agent.critic.forward(states.detach(), actions).flatten()
         Q_disturbed = agent.critic.forward(disturbed, actions).flatten()
-        loss = 0.5 * (Q.detach() - Q_disturbed.detach()).pow(2).mean()
+        loss = 0.5 * (Q.detach() - Q_disturbed).pow(2).mean()
                 
+        # loss = self.coeff*loss     
         # self.coeff = min([1,self.coeff*1.0001])
         loss = T.clip(loss,-self.loss_bound, self.loss_bound)
         return loss

@@ -107,11 +107,11 @@ class Scenario(BaseScenario):
 
         # agents are penalized for exiting the screen, so that they can be caught by the adversaries
         def bound(x):
-            if x < 0.9:
+            if x < 0.8:
                 return 0
             if x < 1.0:
-                return (x - 0.9) * 100
-            return min(np.exp(4 * x - 2), 40)
+                return (x - 0.8) * 100
+            return min(np.exp(3 * x ), 40)
             # else:
                 # return 50
         for p in range(world.dim_p):
@@ -150,7 +150,7 @@ class Scenario(BaseScenario):
                     pass
                 else:
                     if self.is_collision(adv, adv2):
-                        rew += -0.5
+                        rew += -1
         if collision > 1:
             rew += 200 
             collisions[1] += 1

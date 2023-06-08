@@ -59,11 +59,11 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log):
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy):
         print("\n", datetime.datetime.now())
 
+        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, batch_size=self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
         if log:
-            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, alpha=alpha, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
             self.writer = SummaryWriter()
 
         total_steps = 0
@@ -75,11 +75,11 @@ class Train:
         self.load_nets(load, edi_load, load_adversaries)            
 
         if N_games == None:
-            if is_testing:
-                N_games = self.par.N_games_test
-            else:
-                if edi_mode=='train':
+            if edi_mode=='train':
                     N_games = self.par.N_games_edi
+            else:
+                if is_testing:
+                    N_games = self.par.N_games_test
                 else:
                     N_games = self.par.N_games
 
@@ -113,11 +113,17 @@ class Train:
                     time.sleep(0.1)
 
                 if is_testing and edi_mode=='test':
-                    obs, last_comm, communications = self.communication_protocol(obs, last_comm, communications)
+                    obs, last_comm, communications = self.communication_protocol(obs, last_comm, communications, zeta)
                 else:
                     communications += len(self.cooperating_agents_mask)#*(len(self.cooperating_agents_mask)-1)
 
-                actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps)
+                if is_testing:
+                    if not noisy:
+                        actions = self.maddpg_agents.eval_choose_action(obs)
+                    else:
+                        actions = self.maddpg_agents.eval_choose_action_noisy(obs)
+                else:
+                    actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps) 
                 obs_, reward, done, info, n_tags = self.env.step(actions)
                 for k in range(len(n_tags)):
                     n_tags_ep[k] += n_tags[k]
@@ -160,7 +166,7 @@ class Train:
             best = [max(els) for els in zip(best, avg[0:2])]
 
 
-            if (i % self.par.print_interval == 0 and i > 0) or is_testing:
+            if (i % self.par.print_interval == 0 and i > 0) or (is_testing and render):
                 if edi_mode=='test':
                     print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
@@ -191,25 +197,25 @@ class Train:
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy)
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy)
         return history
 
 
@@ -257,7 +263,7 @@ class Train:
             self.gammanet.load()
 
 
-    def communication_protocol(self, obs, last_comm, communications): # ADAPT WHEN MOVING TO WEBOTS!!        
+    def communication_protocol(self, obs, last_comm, communications, zeta): # ADAPT WHEN MOVING TO WEBOTS!!        
         agent_knowledge = []
         agent_knowledge_ = []
 
@@ -277,7 +283,7 @@ class Train:
 
         
         for i in range(len(self.cooperating_agents_mask)):
-            if self.gammanet.communication(agent_knowledge[i], agent_knowledge_[i]):
+            if self.gammanet.communication(agent_knowledge[i], agent_knowledge_[i], zeta):
                # Agent 1 sends update
                 last_comm[i] = agent_knowledge[i][self.pos_mask]
                 communications += 1

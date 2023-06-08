@@ -9,11 +9,10 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 class NetUtilities():
-    def __init__(self, agents, input_dims, alpha=0.0, batch_size = 32, chkpt_dir='/trained_nets/regular'):
-        self.alpha = alpha
+    def __init__(self, agents, input_dims, batch_size = 32, chkpt_dir='/trained_nets/regular'):
         self.batch_size = batch_size
-        self.dataset = DataSet(agents, alpha=self.alpha)
-        self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet_'+str(self.alpha), chkpt_dir='EDI'+chkpt_dir)
+        self.dataset = DataSet(agents)
+        self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet', chkpt_dir='EDI'+chkpt_dir)
 
     def get_gamma_from_net(self, x1, x2): # Getting Gamma from the network given two states
         device = self.gammanet.device
@@ -52,10 +51,10 @@ class NetUtilities():
             self.gammanet.optimizer.step()
 
 
-    def communication(self, x1, x2):
+    def communication(self, x1, x2, zeta):
         gamma = self.get_gamma_from_net(x1, x2)
 
-        if np.linalg.norm(x1-x2) > gamma:
+        if gamma > zeta:
             return True 
         else:
             return False

@@ -169,12 +169,12 @@ class World(object):
             entity.state.p_pos += entity.state.p_vel * self.dt
 
             def bound(x):
-                if x < 0.9 and x > -0.9:
+                if x < 1.0 and x > -1.0:
                     return x
-                elif x >= 0.9:
-                    return 0.9
-                elif x <= -0.9:
-                    return -0.9
+                elif x >= 1.0:
+                    return 1.0
+                elif x <= -1.0:
+                    return -1.0
                 
             for p in range(self.dim_p):
                 entity.state.p_pos[p] = bound(entity.state.p_pos[p])
