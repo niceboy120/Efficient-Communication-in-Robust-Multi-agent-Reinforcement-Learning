@@ -10,9 +10,9 @@ class Scenario(BaseScenario):
         # set any world properties first
         world.dim_c = 2
         num_good_agents = 1
-        num_adversaries = 3
+        num_adversaries = 2
         num_agents = num_adversaries + num_good_agents
-        num_landmarks = 2
+        num_landmarks = 0
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         for i, agent in enumerate(world.agents):
@@ -130,34 +130,16 @@ class Scenario(BaseScenario):
             dist = []
             for adv in adversaries:
                 dist.append(min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents]))
-            rew += -sum(dist)
+            rew += -min(dist)
 
-        while len(dist)>2:
-            dist.remove(max(dist))
-        
+        pos = None
+        for adv in adversaries:
+            pos_old = pos
+            pos = adv.state.p_pos
+
+        rew += -np.sqrt(np.sum(np.square(pos+pos_old)))            
 
         collisions = [0,0,0]
-        collision = 0
-
-        for adv in adversaries:
-            for ag in agents: 
-                if self.is_collision(ag, adv):
-                    rew += 20
-                    collision += 1
-                    collisions[0] += 1
-            for adv2 in adversaries:
-                if adv==adv2:
-                    pass
-                else:
-                    if self.is_collision(adv, adv2):
-                        rew += -1
-        if collision > 1:
-            rew += 200 
-            collisions[1] += 1
-            if collision>2:
-                rew += 500
-                collisions[2] += 1
-
         return rew, collisions
 
     def observation(self, agent, world):

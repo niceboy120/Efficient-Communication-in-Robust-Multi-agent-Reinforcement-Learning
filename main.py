@@ -19,8 +19,8 @@ if __name__ == '__main__':
             # train_agents_LRRL.testing()
 
             # Training maddpg agents
-            history_regular = train_agents_regular.training(load=True, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
-            history_LRRL = train_agents_LRRL.training(load=True, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
+            history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
+            history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
 
             with open('results/results_convergence.pickle', 'wb+') as f:
                 # pickle.dump([history_regular], f)
