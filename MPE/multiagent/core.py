@@ -70,7 +70,7 @@ class Agent(Entity):
         # communication noise amount
         self.c_noise = None
         # control range
-        self.u_range = 1.0
+        self.u_range = 100.0
         # state
         self.state = AgentState()
         # action
@@ -115,20 +115,22 @@ class World(object):
 
     # update state of the world
     def step(self):
-        # set actions for scripted agents 
-        for agent in self.scripted_agents:
-            agent.action = agent.action_callback(agent, self)
-        # gather forces applied to entities
-        p_force = [None] * len(self.entities)
-        # apply agent physical controls
-        p_force = self.apply_action_force(p_force)
-        # apply environment forces
-        p_force = self.apply_environment_force(p_force)
-        # integrate physical state
-        self.integrate_state(p_force)
-        # update agent state
-        for agent in self.agents:
-            self.update_agent_state(agent)
+        # # set actions for scripted agents 
+        # for agent in self.scripted_agents:
+        #     agent.action = agent.action_callback(agent, self)
+        # # gather forces applied to entities
+        # p_force = [None] * len(self.entities)
+        # # apply agent physical controls
+        # p_force = self.apply_action_force(p_force)
+        # # apply environment forces
+        # p_force = self.apply_environment_force(p_force)
+        # # integrate physical state
+        # self.integrate_state(p_force)
+        # # update agent state
+        # for agent in self.agents:
+        #     self.update_agent_state(agent)
+
+        self.update_agent_elisa()
 
     # gather agent action forces
     def apply_action_force(self, p_force):
@@ -179,6 +181,25 @@ class World(object):
             for p in range(self.dim_p):
                 entity.state.p_pos[p] = bound(entity.state.p_pos[p])
 
+    def update_agent_elisa(self):
+        wheelbase = 0.04
+        wheel_radius = 0.0042
+
+        for agent in self.agents:
+            arc = self.dt*wheel_radius*agent.action.u
+            arc_avg = sum(arc)/len(arc)
+
+            beta = (arc[0]-arc[1])/wheelbase
+            if beta==0: # Gives a divide by zero error, robot goes straight
+                agent.state.p_pos[0] += arc_avg*np.cos(agent.state.p_rot)
+                agent.state.p_pos[1] += arc_avg*np.sin(agent.state.p_rot)
+            else:
+                R = arc_avg/beta
+                x_rel = R*np.cos(beta)-R
+                y_rel = R*np.sin(beta)
+                agent.state.p_pos[0] += -np.sin(agent.state.p_rot)*x_rel + np.cos(agent.state.p_rot)*y_rel
+                agent.state.p_pos[1] += np.cos(agent.state.p_rot)*x_rel + np.sin(agent.state.p_rot)*y_rel
+                agent.state.p_rot += beta
 
     def update_agent_state(self, agent):
         # set communication state (directly for now)
