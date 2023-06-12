@@ -40,7 +40,7 @@ import numpy as np
 
 
 
-with open('results_edi.pickle', 'rb') as f:
+with open('results/results_edi.pickle', 'rb') as f:
     data = pickle.load(f)
 
 fig,ax = plt.subplots()

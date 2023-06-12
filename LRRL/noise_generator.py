@@ -8,7 +8,7 @@ import numpy as np
 
 
 class NoiseGenerator:
-    def __init__(self, variance=0.5, bound=None, mode=1):
+    def __init__(self, variance=0.05, bound=None, mode=1):
         self.mode = mode
         self.var = variance
 
@@ -56,7 +56,7 @@ class NoiseGenerator:
         elif self.mode == 1:
             # Uniform bounded noise
             noise = T.rand_like(x)-0.5
-            return x.detach()+2*self.bound*noise.detach()
+            return x.detach() + 0.2*self.bound*noise.detach()
             # for i,xi in enumerate(x):
             #     noise[i] = np.clip(np.add(np.random.uniform(self.bound, self.minbound, self.shape),np.asarray(xi)),
             #                        self.low,self.high)if np.random.uniform() > self.p_uniform else xi

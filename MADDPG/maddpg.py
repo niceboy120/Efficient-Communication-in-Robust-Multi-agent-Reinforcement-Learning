@@ -55,7 +55,7 @@ class MADDPG:
     def clear_cache(self):
         T.cuda.empty_cache()
 
-    def learn(self, memory, lexi_mode, ratio, robust_actor_loss, writer=None, i=None):
+    def learn(self, memory, lexi_mode, robust_actor_loss, writer=None, i=None):
         if not memory.ready():
             return
 
@@ -120,20 +120,26 @@ class MADDPG:
                 if robust_actor_loss:
                     robust_loss = agent.lexicographic_weights.robust_loss_actor(T.tensor(np.array(actor_states[agent_idx]), dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent)
                 else:
-                    robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent)                
+                    robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent, device)                
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
 
                 if writer is not None:
                     writer.add_scalar("robustness loss", robust_loss, i)
                     writer.add_scalar("policy loss", actor_loss, i)
+                    writer.add_scalar("weight 1", w[0], i)
+                    writer.add_scalar("weight 2", w[1], i)
                 
+                loss = actor_loss + robust_loss*(w[1]/w[0])
+
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())
                 agent.lexicographic_weights.update_lagrange(agent.recent_losses)
-                
-                loss = actor_loss + robust_loss*(w[1]/w[0])
+
             else:
                 loss = actor_loss
+
+            if writer is not None:
+                writer.add_scalar("total policy loss", loss, i)
             
             agent.actor.optimizer.zero_grad()
             loss.backward(retain_graph=True)

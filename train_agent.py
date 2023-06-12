@@ -62,7 +62,9 @@ class Train:
     def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy):
         print("\n", datetime.datetime.now())
 
-        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, batch_size=self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
+        if edi_mode!='disabled':
+            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
+        
         if log:
             self.writer = SummaryWriter()
 
@@ -138,9 +140,9 @@ class Train:
                     self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
                     if total_steps % 100 == 0:
                         if log:
-                            self.maddpg_agents.learn(self.memory, lexi_mode_active, i/N_games, robust_actor_loss, self.writer, i)
+                            self.maddpg_agents.learn(self.memory, lexi_mode_active, robust_actor_loss, self.writer, i)
                         else:
-                            self.maddpg_agents.learn(self.memory, lexi_mode_active, i/N_games, robust_actor_loss)
+                            self.maddpg_agents.learn(self.memory, lexi_mode_active, robust_actor_loss)
                         self.maddpg_agents.clear_cache()
 
                 obs = obs_
