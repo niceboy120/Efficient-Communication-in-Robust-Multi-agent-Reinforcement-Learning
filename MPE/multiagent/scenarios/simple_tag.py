@@ -99,8 +99,10 @@ class Scenario(BaseScenario):
         shape = True
         adversaries = self.adversaries(world)
         if shape:  # reward can optionally be shaped (increased reward for increased distance from adversary)
+            dist = []
             for adv in adversaries:
-                rew += 0.1 * np.sqrt(np.sum(np.square(agent.state.p_pos - adv.state.p_pos)))
+                dist.append(0.2 * np.sqrt(np.sum(np.square(agent.state.p_pos - adv.state.p_pos))))
+            rew += -min(dist)
         if agent.collide:
             for a in adversaries:
                 if self.is_collision(a, agent):
@@ -132,6 +134,11 @@ class Scenario(BaseScenario):
             for adv in adversaries:
                 dist.append(min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents]))
             rew += -min(dist)
+
+        if agent.collide:
+            for ag in agents: 
+                if self.is_collision(ag, adv):
+                    rew += 10
 
         pos = None
         for adv in adversaries:
