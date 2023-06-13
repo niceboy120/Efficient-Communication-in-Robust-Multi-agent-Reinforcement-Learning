@@ -1,5 +1,4 @@
 import numpy as np
-from torch.utils.tensorboard import SummaryWriter
 from MPE.multiagent.core import World, Agent, Landmark
 from MPE.multiagent.scenario import BaseScenario
 
