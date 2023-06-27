@@ -14,6 +14,7 @@ class Train:
     def __init__(self, scenario, chkpt_dir='/trained_nets/regular/'):
         self.par = HyperParameters()
         self.chkpt_dir = chkpt_dir
+        self.scenario = scenario
 
         self.env = make_env(scenario)
         self.n_agents = self.env.n
@@ -32,12 +33,17 @@ class Train:
         else:
             self.cooperating_agents_mask = list(range(self.n_adversaries,self.n_adversaries+self.n_good_agents))
 
+
+        # CHANGE THIS 
         if scenario=='simple_tag':
             self.pos_mask = [2,3]
-            self.pos_others_mask = list(range(8, 8+(self.n_adversaries-1)*2))
+            self.pos_others_mask = list(range(4, 4+(self.n_adversaries-1)*2))
         elif scenario=='simple_adversary':
             self.pos_mask = [0,1]
             self.pos_others_mask = list(range(8, 8+(self.n_good_agents-1)*2))
+        elif scenario=='simple_tag_elisa':
+            self.pos_mask = [2,3,4]
+            self.pos_others_mask = list(range(5, 5+(self.n_adversaries-1)*3))
         else:
             print("WARNING: You picked a scenario for which EDI is not implemented.")
 
@@ -60,10 +66,10 @@ class Train:
 
 
     def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy):
-        print("\n", datetime.datetime.now())
+        self.print_start_message(is_testing, edi_mode, lexi_mode, zeta)
 
         if edi_mode!='disabled':
-            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
+            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, self.scenario, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
         
         if log:
             self.writer = SummaryWriter()
@@ -126,6 +132,7 @@ class Train:
                         actions = self.maddpg_agents.eval_choose_action_noisy(obs)
                 else:
                     actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps) 
+                # print(actions)
                 obs_, reward, done, info, n_tags = self.env.step(actions)
                 for k in range(len(n_tags)):
                     n_tags_ep[k] += n_tags[k]
@@ -168,7 +175,7 @@ class Train:
             best = [max(els) for els in zip(best, avg[0:2])]
 
 
-            if (i % self.par.print_interval == 0 and i > 0) or (is_testing and render):
+            if (i % self.par.print_interval == 0 and i > 0):
                 if edi_mode=='test':
                     print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
@@ -177,6 +184,10 @@ class Train:
                     print('episode: ', i, ', average score adversaries:  {:.1f}'.format(avg[0]), 
                             ', best score adversaries: {:.1f}'.format(best[0]), ', average score good agents: {:.1f}'.format(avg[1]), 
                             ', best score good agents: {:.1f}'.format(best[1]))
+            elif (is_testing and render):
+                print('episode: ', i, ', score adversaries:  {:.1f}'.format(score[0]), 
+                            ', best score adversaries: {:.1f}'.format(best[0]), ', score good agents: {:.1f}'.format(score[1]), 
+                            ', best score good agents: {:.1f}'.format(best[1]), ', communications: {:.1f}'.format(communications))
 
             if (i % self.par.autosave_interval == 0 and i > 0):
                 if not is_testing:
@@ -306,4 +317,26 @@ class Train:
 
     def clear_buffer(self):
         self.memory.init_actor_memory()
+
+    def print_start_message(self, is_testing, edi_mode, lexi_mode, zeta):
+        print("\n","===============================================================================\n", datetime.datetime.now())
+        if not is_testing:
+            msg1 = "Training "
+        else:
+            msg1 = "Testing "
+
+        if not lexi_mode:
+            msg2 = "regular policy"
+        else:
+            msg2 = "lexicographic policy"
+
+        if edi_mode == 'train':
+            msg3 = ", training gammanet"
+        elif edi_mode == 'test':
+            msg3 = ", testing gammanet with zeta = "+str(zeta)
+        else:
+            msg3 = ""
+        
+        msg = msg1+msg2+msg3
+        print(msg)
 

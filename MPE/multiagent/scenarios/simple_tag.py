@@ -1,11 +1,12 @@
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 from MPE.multiagent.core import World, Agent, Landmark
 from MPE.multiagent.scenario import BaseScenario
 
 
 class Scenario(BaseScenario):
-    def make_world(self):
-        world = World()
+    def make_world(self, environment):
+        world = World(environment)
         # set any world properties first
         world.dim_c = 2
         num_good_agents = 1
@@ -47,7 +48,6 @@ class Scenario(BaseScenario):
         # set random initial states
         for agent in world.agents:
             agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
-            agent.state.p_rot = np.random.uniform(0, np.pi, 1)
             agent.state.p_vel = np.zeros(world.dim_p)
             agent.state.c = np.zeros(world.dim_c)
         for i, landmark in enumerate(world.landmarks):
@@ -137,7 +137,7 @@ class Scenario(BaseScenario):
         if agent.collide:
             for ag in agents: 
                 if self.is_collision(ag, adv):
-                    rew += 10
+                    rew += 50
 
         pos = None
         for adv in adversaries:

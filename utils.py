@@ -6,7 +6,7 @@ class HyperParameters:
         self.N_games_edi = 3000
         self.N_games_test = 1000
         self.lexi_activate_episode_threshold = 30000
-        self.print_interval = 100
+        self.print_interval = 500
         self.autosave_interval = 1000
         self.max_steps = 50
         self.eps = 0.9

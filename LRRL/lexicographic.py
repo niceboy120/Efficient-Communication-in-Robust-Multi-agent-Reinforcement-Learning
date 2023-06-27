@@ -43,6 +43,7 @@ class LexicographicWeights():
         return first_order_weights
 
     def robust_loss_actor(self, states, actions, agent):
+        agent.actor.eval()
         disturbed = self.noise.nu(states)
         disturbed_actions = agent.actor.forward(disturbed)
 
@@ -59,6 +60,7 @@ class LexicographicWeights():
 
         disturbed = self.noise.nu(states)
 
+        agent.critic.eval()
         Q = agent.critic.forward(states.detach(), actions).flatten()
         Q_disturbed = agent.critic.forward(disturbed.to(device).detach, actions).flatten()
         loss = 0.5 * (Q.detach() - Q_disturbed).pow(2).mean()

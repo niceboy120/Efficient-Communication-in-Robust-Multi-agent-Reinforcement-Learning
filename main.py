@@ -13,8 +13,10 @@ if __name__ == '__main__':
             break
 
         try:
-            train_agents_regular = Train('simple_tag', chkpt_dir='/trained_nets/regular/')
-            train_agents_LRRL = Train('simple_tag', chkpt_dir='/trained_nets/LRRL/')
+            ENV = 'simple_tag_elisa' # 1: simple_tag, 2: simple_tag_elisa, 3: webots
+
+            train_agents_regular = Train(ENV, chkpt_dir='/trained_nets/regular/')
+            train_agents_LRRL = Train(ENV, chkpt_dir='/trained_nets/LRRL/')
             # train_agents_regular.testing()
             # train_agents_LRRL.testing()
 
@@ -49,7 +51,6 @@ if __name__ == '__main__':
             # Testing EDI for different alphas
             zeta = [1,10,100,500,1000]
             for z in zeta:
-                print("Testing with zeta = ", z)
                 history = train_agents_regular.testing(edi_mode='test', render=False, zeta=z, lexi_mode=False)
                 mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
                 std_regular = np.vstack((std_regular, np.std(history, axis=0)))
@@ -62,16 +63,6 @@ if __name__ == '__main__':
             with open('results/results_edi.pickle', 'wb+') as f:
                 # pickle.dump([alpha, mean_regular, std_regular],f)
                 pickle.dump([zeta, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
-
-
-            # Want to make it so it does not always overwrite the picle file. maybe add to it?
-            # Change name alpha to zeta?
-            
-
-            
-
-
-            # train_agents.testing()
 
                 
         except KeyboardInterrupt:
@@ -88,29 +79,3 @@ if __name__ == '__main__':
                 continue
 
         stop += 1 
-
-
-
-
-
-
-
-""" 
-To Dos:
-- change alpha to zeta
-- make a config file/class in utils
-- implement a convergence check
-    - For reward mode 1 maybe for all adversaries the average distance to the target
-    - For reward mode 2 maybe if multiple episodes in a row have had double tags
-- Do the thing that the output pickle file does not get overwritten everytime but maybe add to it?
-
-Need to find a way to encourage the second one to catch up without penalizing the first one for going forward
-
-Maybe don't do a full clear of the replay buffer but a first-in-first-out method with a fixed size might be better??? ALREADY BUILT IN, JUST MAKE THE BUFFER SIZE SMALLER!!
-"""
-
-
-
-                
-
-

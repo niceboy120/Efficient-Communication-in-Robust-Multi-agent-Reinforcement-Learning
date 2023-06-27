@@ -61,7 +61,7 @@ class MADDPG:
 
         actor_states, states, actions, rewards, \
         actor_new_states, states_, dones = memory.sample_buffer()
-
+        
         device = self.agents[0].actor.device
 
         states = T.tensor(np.array(states), dtype=T.float32).to(device)
@@ -75,6 +75,11 @@ class MADDPG:
         old_agents_actions = []
 
         for agent_idx, agent in enumerate(self.agents):
+            agent.target_actor.eval()
+            agent.target_critic.eval()
+            agent.actor.eval()
+            agent.critic.eval()
+
             new_states = T.tensor(np.array(actor_new_states[agent_idx]), 
                                  dtype=T.float32).to(device)
             new_pi = agent.target_actor.forward(new_states)
@@ -101,6 +106,7 @@ class MADDPG:
             target = target.detach()
 
             # with autocast():
+            agent.critic.train()
             critic_loss = F.mse_loss(target, critic_value)
             agent.critic.optimizer.zero_grad()
             critic_loss.backward()
@@ -111,7 +117,8 @@ class MADDPG:
             # self.scaler.step(agent.critic.optimizer)
             # self.scaler.update()
 
-            actor_loss = agent.critic.forward(states.detach(), mu).flatten()
+            agent.critic.eval()
+            actor_loss = agent.critic.forward(states, mu).flatten()
             actor_loss = -T.mean(actor_loss)
 
             if lexi_mode:
@@ -135,15 +142,19 @@ class MADDPG:
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())
                 agent.lexicographic_weights.update_lagrange(agent.recent_losses)
 
-            else:
-                loss = actor_loss
+                agent.actor.train()
+                agent.actor.optimizer.zero_grad()
+                loss.backward(retain_graph=True)
+                agent.actor.optimizer.step()
 
-            if writer is not None:
-                writer.add_scalar("total policy loss", loss, i)
-            
-            agent.actor.optimizer.zero_grad()
-            loss.backward(retain_graph=True)
-            agent.actor.optimizer.step()
+                if writer is not None:
+                    writer.add_scalar("total policy loss", loss, i)
+
+            else:
+                agent.actor.train()
+                agent.actor.optimizer.zero_grad()
+                actor_loss.backward(retain_graph=True)
+                agent.actor.optimizer.step()
 
             # self.scaler.scale(loss).backward(retain_graph=True)
             # self.scaler.unscale_(agent.actor.optimizer)

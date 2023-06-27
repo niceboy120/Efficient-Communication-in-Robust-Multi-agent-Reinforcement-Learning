@@ -80,7 +80,8 @@ class Agent(Entity):
 
 # multi-agent world
 class World(object):
-    def __init__(self):
+    def __init__(self, environment):
+        self.env = environment
         # list of agents and entities (can change at execution-time!)
         self.agents = []
         self.landmarks = []
@@ -115,22 +116,24 @@ class World(object):
 
     # update state of the world
     def step(self):
-        # # set actions for scripted agents 
-        # for agent in self.scripted_agents:
-        #     agent.action = agent.action_callback(agent, self)
-        # # gather forces applied to entities
-        # p_force = [None] * len(self.entities)
-        # # apply agent physical controls
-        # p_force = self.apply_action_force(p_force)
-        # # apply environment forces
-        # p_force = self.apply_environment_force(p_force)
-        # # integrate physical state
-        # self.integrate_state(p_force)
-        # # update agent state
-        # for agent in self.agents:
-        #     self.update_agent_state(agent)
+        if self.env != 'simple_tag_elisa' and self.env != 'simple_tag_webots':
+            # set actions for scripted agents 
+            for agent in self.scripted_agents:
+                agent.action = agent.action_callback(agent, self)
+            # gather forces applied to entities
+            p_force = [None] * len(self.entities)
+            # apply agent physical controls
+            p_force = self.apply_action_force(p_force)
+            # apply environment forces
+            p_force = self.apply_environment_force(p_force)
+            # integrate physical state
+            self.integrate_state(p_force)
+            # update agent state
+            for agent in self.agents:
+                self.update_agent_state(agent)
 
-        self.update_agent_elisa()
+        else:
+            self.update_agent_elisa()
 
     # gather agent action forces
     def apply_action_force(self, p_force):
@@ -190,7 +193,7 @@ class World(object):
             arc_avg = sum(arc)/len(arc)
 
             beta = (arc[0]-arc[1])/wheelbase
-            if beta==0: # Gives a divide by zero error, robot goes straight
+            if abs(beta)<0.01: # Gives a divide by zero error, robot goes straight
                 agent.state.p_pos[0] += arc_avg*np.cos(agent.state.p_rot)
                 agent.state.p_pos[1] += arc_avg*np.sin(agent.state.p_rot)
             else:
@@ -200,6 +203,21 @@ class World(object):
                 agent.state.p_pos[0] += -np.sin(agent.state.p_rot)*x_rel + np.cos(agent.state.p_rot)*y_rel
                 agent.state.p_pos[1] += np.cos(agent.state.p_rot)*x_rel + np.sin(agent.state.p_rot)*y_rel
                 agent.state.p_rot += beta
+            
+
+            agent.state.p_vel = (arc_avg/self.dt)*np.array([np.cos(agent.state.p_rot[0]), np.sin(agent.state.p_rot[0])])
+
+            
+            def bound(x):
+                if x < 1.0 and x > -1.0:
+                    return x
+                elif x >= 1.0:
+                    return 1.0
+                elif x <= -1.0:
+                    return -1.0
+                
+            for p in range(self.dim_p):
+                agent.state.p_pos[p] = bound(agent.state.p_pos[p])
 
     def update_agent_state(self, agent):
         # set communication state (directly for now)

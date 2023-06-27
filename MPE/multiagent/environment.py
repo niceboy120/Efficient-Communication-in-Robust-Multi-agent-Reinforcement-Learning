@@ -11,11 +11,12 @@ class MultiAgentEnv(gym.Env):
         'render.modes' : ['human', 'rgb_array']
     }
 
-    def __init__(self, world, reset_callback=None, reward_callback=None,
+    def __init__(self, world, environment, reset_callback=None, reward_callback=None,
                  observation_callback=None, info_callback=None,
                  done_callback=None, shared_viewer=True):
 
         self.world = world
+        self.env = environment
         self.agents = self.world.policy_agents
         # set required vectorized gym env property
         self.n = len(world.policy_agents)
@@ -154,56 +155,71 @@ class MultiAgentEnv(gym.Env):
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
-        # agent.action.u = np.zeros(2)
-        # agent.action.c = np.zeros(self.world.dim_c)
-        # # process action
-        # if isinstance(action_space, MultiDiscrete):
-        #     act = []
-        #     size = action_space.high - action_space.low + 1
-        #     index = 0
-        #     for s in size:
-        #         act.append(action[index:(index+s)])
-        #         index += s
-        #     action = act
-        # else:
-        #     action = [action]
+        if self.env != 'simple_tag_elisa' and self.env != 'simple_tag_webots':
+            agent.action.u = np.zeros(2)
+            agent.action.c = np.zeros(self.world.dim_c)
+            # process action
+            if isinstance(action_space, MultiDiscrete):
+                act = []
+                size = action_space.high - action_space.low + 1
+                index = 0
+                for s in size:
+                    act.append(action[index:(index+s)])
+                    index += s
+                action = act
+            else:
+                action = [action]
 
-        # if agent.movable:
-        #     # physical action
-        #     if self.discrete_action_input:
-        #         agent.action.u = np.zeros(self.world.dim_p)
-        #         # process discrete action
-        #         if action[0] == 1: agent.action.u[0] = -1.0
-        #         if action[0] == 2: agent.action.u[0] = +1.0
-        #         if action[0] == 3: agent.action.u[1] = -1.0
-        #         if action[0] == 4: agent.action.u[1] = +1.0
-        #     else:
-        #         if self.force_discrete_action:
-        #             d = np.argmax(action[0])
-        #             action[0][:] = 0.0
-        #             action[0][d] = 1.0
-        #         if self.discrete_action_space:
-        #             agent.action.u[0] += action[0][1] - action[0][2]
-        #             agent.action.u[1] += action[0][3] - action[0][4]
-        #         else:
-        #             agent.action.u = action[0]
-        #     sensitivity = 5.0
-        #     if agent.accel is not None:
-        #         sensitivity = agent.accel
-        #     agent.action.u *= sensitivity
-        #     action = action[1:]
-        # if not agent.silent:
-        #     # communication action
-        #     if self.discrete_action_input:
-        #         agent.action.c = np.zeros(self.world.dim_c)
-        #         agent.action.c[action[0]] = 1.0
-        #     else:
-        #         agent.action.c = action[0]
-        #     action = action[1:]
-        # # make sure we used all elements of action
-        # assert len(action) == 0
-        
-        agent.action.u = action
+            if agent.movable:
+                # physical action
+                if self.discrete_action_input:
+                    agent.action.u = np.zeros(self.world.dim_p)
+                    # process discrete action
+                    if action[0] == 1: agent.action.u[0] = -1.0
+                    if action[0] == 2: agent.action.u[0] = +1.0
+                    if action[0] == 3: agent.action.u[1] = -1.0
+                    if action[0] == 4: agent.action.u[1] = +1.0
+                else:
+                    if self.force_discrete_action:
+                        d = np.argmax(action[0])
+                        action[0][:] = 0.0
+                        action[0][d] = 1.0
+                    if self.discrete_action_space:
+                        agent.action.u[0] += action[0][1] - action[0][2]
+                        agent.action.u[1] += action[0][3] - action[0][4]
+                    else:
+                        agent.action.u = action[0]
+                sensitivity = 5.0
+                if agent.accel is not None:
+                    sensitivity = agent.accel
+                agent.action.u *= sensitivity
+                action = action[1:]
+            if not agent.silent:
+                # communication action
+                if self.discrete_action_input:
+                    agent.action.c = np.zeros(self.world.dim_c)
+                    agent.action.c[action[0]] = 1.0
+                else:
+                    agent.action.c = action[0]
+                action = action[1:]
+            # make sure we used all elements of action
+            assert len(action) == 0
+
+
+        else:
+            # print(action)
+            # action = [0.8, 0.5]
+            # 1st action input is gas: mapping from [-1,1] to [0,100]:
+            gas = (action[0]+1)*50
+
+            # 2nd action is turning: mapping from [-1,1] to [-25, 25]
+            turn = (action[1])*25
+
+            # Turning left is positive:
+            # print(np.array([gas+turn, gas-turn]))
+            agent.action.u =  np.array([gas+turn, gas-turn])
+            # print(agent.action.u)
+            # print("")
 
     # reset rendering assets
     def _reset_render(self):

@@ -2,32 +2,34 @@ import torch as T
 import numpy as np
 from MADDPG.networks import ActorNetwork, CriticNetwork
 import random
+import copy
 from LRRL.lexicographic import LexicographicWeights
 from LRRL.noise_generator import NoiseGenerator
 
 class Agent:
     def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, noise_mode, chkpt_dir,
-                    lr_actor=0.01, lr_critic=0.01, fc1=64, 
-                    fc2=64, gamma=0.95, tau=0.01):
+                    lr_actor=0.01, lr_critic=0.01, fc1=128, 
+                    fc2=128, fc3=128, gamma=0.95, tau=0.01):
         self.gamma = gamma
         self.tau = tau
         self.n_actions = n_actions
         self.agent_name = 'agent_%s' % agent_idx
-        self.actor = ActorNetwork(lr_actor, actor_dims, fc1, fc2, n_actions, 
+        self.actor = ActorNetwork(lr_actor, actor_dims, fc1, fc2, fc3, n_actions, 
                                   chkpt_dir=chkpt_dir,  name=self.agent_name+'_actor')
         self.critic = CriticNetwork(lr_critic, critic_dims, 
-                            fc1, fc2, n_agents, n_actions, 
+                            fc1, fc2, fc3, n_agents, n_actions, 
                             chkpt_dir=chkpt_dir, name=self.agent_name+'_critic')
-        self.target_actor = ActorNetwork(lr_actor, actor_dims, fc1, fc2, n_actions,
+        self.target_actor = ActorNetwork(lr_actor, actor_dims, fc1, fc2, fc3, n_actions,
                                         chkpt_dir=chkpt_dir, 
                                         name=self.agent_name+'_target_actor')
         self.target_critic = CriticNetwork(lr_critic, critic_dims, 
-                                            fc1, fc2, n_agents, n_actions,
+                                            fc1, fc2, fc3, n_agents, n_actions,
                                             chkpt_dir=chkpt_dir,
                                             name=self.agent_name+'_target_critic')
         
 
         self.noise = NoiseGenerator(mode = noise_mode)
+        self.OUnoise = OUNoise(n_actions)
         self.lexicographic_weights = LexicographicWeights(self.noise)
         self.recent_losses = self.lexicographic_weights.init_recent_losses()
         
@@ -38,29 +40,41 @@ class Agent:
             if decreasing_eps:
                 eps = (1-ratio)*eps# + (1-eps)
 
+        self.actor.eval()
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.actor.device)
         actions = self.actor.forward(state)
-        noise = T.rand(self.n_actions).to(self.actor.device)
+        noise = T.rand(self.n_actions)*2-1
+        noise = noise.to(self.actor.device)
+        # print("noise:", noise)
+
+        self.actor.train()
 
         if greedy:
             if random.uniform(0,1)>eps:
                 action = actions
+                action = action.detach().cpu().numpy()[0]
             else:
                 action = 0*actions+noise
+                action = action.detach().cpu().numpy()[0]
         else:
-            action = actions + noise
-        return action.detach().cpu().numpy()[0]
+            action = actions.detach().cpu().numpy()[0] + self.OUnoise.sample()
+
+        return np.clip(action, -1, 1)
     
     def eval_choose_action(self, observation):
+        self.target_actor.eval()
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.target_actor.device)
         actions = self.target_actor.forward(state)
+        self.target_actor.train()
 
         return actions.detach().cpu().numpy()[0]
     
     def eval_choose_action_noisy(self, observation):
+        self.target_actor.eval()
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.target_actor.device)
         disturbed = self.noise.nu(state)
         actions = self.target_actor.forward(disturbed)
+        self.target_actor.train()
 
         return actions.detach().cpu().numpy()[0]
 
@@ -101,3 +115,28 @@ class Agent:
         self.target_actor.load_checkpoint()
         self.critic.load_checkpoint()
         self.target_critic.load_checkpoint()
+
+
+
+
+
+class OUNoise:
+    """Ornstein-Uhlenbeck process."""
+
+    def __init__(self, size, mu=0., theta=0.15, sigma=0.05):
+        """Initialize parameters and noise process."""
+        self.mu = mu * np.ones(size)
+        self.theta = theta
+        self.sigma = sigma
+        self.reset()
+
+    def reset(self):
+        """Reset the internal state (= noise) to mean (mu)."""
+        self.state = copy.copy(self.mu)
+
+    def sample(self):
+        """Update internal state and return it as a noise sample."""
+        x = self.state
+        dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
+        self.state = x + dx
+        return self.state
