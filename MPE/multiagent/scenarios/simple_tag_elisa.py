@@ -132,7 +132,7 @@ class Scenario(BaseScenario):
             dist = []
             for adv in adversaries:
                 dist.append(min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents]))
-            rew += -min(dist)
+            # rew += -min(dist)
             # rew += -sum(dist)
 
         if agent.collide:
@@ -144,9 +144,9 @@ class Scenario(BaseScenario):
         for adv in adversaries:
             pos_old = pos
             pos = adv.state.p_pos
-            #     rew += -np.sqrt(np.sum(np.square(pos)))
+            rew += -np.sqrt(np.sum(np.square(pos)))
         
-        rew += -0.25*np.sqrt(np.sum(np.square(pos+pos_old)))            
+        # rew += -0.25*np.sqrt(np.sum(np.square(pos+pos_old)))            
 
         collisions = [0,0,0]
         return rew, collisions

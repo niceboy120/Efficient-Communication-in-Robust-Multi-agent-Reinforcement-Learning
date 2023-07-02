@@ -20,20 +20,20 @@ if __name__ == '__main__':
             # train_agents_regular.testing()
             # train_agents_LRRL.testing()
 
-            # Training maddpg agents
-            history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
-            history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
+            # # Training maddpg agents
+            # history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
+            # history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
 
-            with open('results/results_convergence.pickle', 'wb+') as f:
-                # pickle.dump([history_regular], f)
-                pickle.dump([history_regular, history_LRRL], f)
+            # with open('results/results_convergence.pickle', 'wb+') as f:
+            #     # pickle.dump([history_regular], f)
+            #     pickle.dump([history_regular, history_LRRL], f)
 
-            # Testing the robustness
-            test_regular_noise = train_agents_regular.testing(render=False, noisy=True)
-            test_LRRL_noise = train_agents_LRRL.testing(render=False, noisy=True)
+            # # Testing the robustness
+            # test_regular_noise = train_agents_regular.testing(render=False, noisy=True)
+            # test_LRRL_noise = train_agents_LRRL.testing(render=False, noisy=True)
 
-            with open('results/results_noise_test.pickle', 'wb+') as f:
-                pickle.dump([test_regular_noise, test_LRRL_noise], f)
+            # with open('results/results_noise_test.pickle', 'wb+') as f:
+            #     pickle.dump([test_regular_noise, test_LRRL_noise], f)
 
             # Training gammanet
             train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=False)

@@ -1,7 +1,7 @@
 import numpy as np
+import random
 import torch as T
 from utils import obs_list_to_state_vector
-from EDI.network import GammaNet
 
 
 
@@ -12,64 +12,61 @@ class DataSet:
         self.agents = agents
 
 
-    def calculate_IO(self, sequence, cooperating_agents_mask, zeta, min_length_sequence=20):
-        I = len(sequence)-1
+    def calculate_IO(self, sequence, cooperating_agents_mask, pos_others_mask, pos_mask):
+        I = len(sequence)
+        num_samples_max = 3
 
         io = []
-        gamma_cache = {}
-        for i in range(I-min_length_sequence):
-            # gamma = self.calculate_gamma(sequence[i:])
-            gamma = gamma_cache.get(i, self.calculate_gamma(sequence[i:], cooperating_agents_mask, zeta))
-            gamma_cache[i] = gamma
-            for j in range(i+1, I+1):
-                for l,k in enumerate(cooperating_agents_mask):
-                    io.append([np.concatenate((sequence[i][k],sequence[j][k],np.array([zeta]))), gamma[l]])
-                # io_ij = np.column_stack([sequence[i][1:], sequence[i+j+1][1:], gamma])
-                # io.append(io_ij)
+        for i in range(2,I):
+            num_samples = min(num_samples_max, i)
+            mask = []
 
-        # One line of IO is a set of two observations of the same agent and their corresponding gamma
+            for k in range(len(cooperating_agents_mask)):
+                mask.append(random.sample(range(0, i+1), num_samples))
+
+            for j in range(num_samples):
+                O = []
+                Ohat = []
+                for k, agent_idx in enumerate(cooperating_agents_mask):
+                    O.append(sequence[i][agent_idx])
+                    O[k][pos_others_mask] = sequence[mask[k][j]][agent_idx][pos_others_mask]
+                    Ohat.append(O[k])
+                    Ohat[k][pos_mask] = sequence[mask[k-1][j]][k][pos_mask]
+
+
+                o1 = sequence[i][0]
+                o1[pos_others_mask] = sequence[mask[0][j]][0][pos_others_mask]
+                ohat1 = o1
+                ohat1[pos_mask] = sequence[mask[1][j]][0][pos_mask]
+
+                o2 = sequence[i][1]
+                o2[pos_others_mask] = sequence[mask[1][j]][1][pos_others_mask]
+                ohat2 = o2
+                ohat2[pos_mask] = sequence[mask[0][j]][1][pos_mask]
+                
+                x1 = sequence[i]
+                x1[0] = o1
+                x2 = sequence[i]
+                x2[1] = o2
+                x = sequence[i]
+                xhat = sequence[i]
+                xhat[0] = o1
+                xhat[1] = o2
+       
+                # print(self.get_Q(x, xhat, self.agents.agents[0]) - self.get_Q(x, xhat, self.agents.agents[1])) 
+                zeta1 = self.get_Q(x, x1, self.agents.agents[0]) - self.get_Q(x, xhat, self.agents.agents[0])
+                zeta2 = self.get_Q(x, x2, self.agents.agents[1]) - self.get_Q(x, xhat, self.agents.agents[1])
+                zeta = max(zeta1, zeta2)
+
+                io.append([np.concatenate([o1, ohat1]), zeta])
+                io.append([np.concatenate([o2, ohat2]), zeta])
         return io
 
-    def calculate_gamma(self, sequence, cooperating_agents_mask, zeta):           
-        number_of_transitions = len(sequence)-1 # Need to know the number of transitions in the sequence
+    def get_Q(self, state, state_action, agent):  
+        device = agent.target_critic.device
+        Q = agent.target_critic.forward(T.tensor(np.array([obs_list_to_state_vector(state)]), dtype=T.float32).to(device), self.get_mu(state_action)).flatten()
 
-        # Initialization
-        done = False
-        i = 1
-
-        mu0 = self.get_mu(sequence[0])
-
-        # Loop
-        while not done and i<= number_of_transitions:
-            if any(self.get_Q_values(sequence[i], mu0, cooperating_agents_mask) <= np.array(self.get_Q_values(sequence[i], self.get_mu(sequence[i]), cooperating_agents_mask))-zeta): 
-                # If for one of the cooperating agents the Q values differ too much, stop
-                done = True
-            else:
-                i += 1
-
-        # Calculate gamma as the norm between the states
-        # gamma = np.linalg.norm(self.concat_obs(sequence[0])-self.concat_obs(sequence[i-1]))
-
-        # gamma = []
-        # for k in range(1, self.agents.n_agents):
-        #     gamma.append(np.linalg.norm(sequence[0][k]-sequence[i-1][k]))
-
-        gamma = [np.linalg.norm(sequence[0][k]-sequence[i-1][k], np.inf) for k in cooperating_agents_mask]
-        return gamma
-
-
-    def get_Q_values(self, state, mu, cooperating_agents_mask):
-        Q_all = []
-
-        # Loop through agents and get Q values for state, with optimal actions for state_mu
-        for i in cooperating_agents_mask: #agent_idx, agent in enumerate(self.agents.agents):
-            agent = self.agents.agents[i]        
-            device = self.agents.agents[i].target_critic.device
-            Q = agent.target_critic.forward(T.tensor(np.array([obs_list_to_state_vector(state)]), dtype=T.float32).to(device), mu).flatten()
-            Q_all.append(Q.detach().cpu().numpy()[0])
-        
-        # We only need the Q values for the cooperating agents
-        return Q_all
+        return Q.detach().cpu().numpy()[0]
     
 
     def get_mu(self, state_mu):
@@ -85,11 +82,3 @@ class DataSet:
 
         mu = T.cat([acts for acts in actions], dim=1)
         return mu
-
-
-
-
-
-    # @ staticmethod
-    # def concat_obs(observation):
-    #     return np.concatenate((observation[0], observation[1], observation[2]))
