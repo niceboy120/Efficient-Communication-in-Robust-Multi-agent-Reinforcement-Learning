@@ -13,27 +13,27 @@ if __name__ == '__main__':
             break
 
         try:
-            ENV = 'simple_tag_elisa' # 1: simple_tag, 2: simple_tag_elisa, 3: webots
+            ENV = 'simple_tag' # 1: simple_tag, 2: simple_tag_elisa, 3: webots
 
             train_agents_regular = Train(ENV, chkpt_dir='/trained_nets/regular/')
             train_agents_LRRL = Train(ENV, chkpt_dir='/trained_nets/LRRL/')
             # train_agents_regular.testing()
             # train_agents_LRRL.testing()
 
-            # # Training maddpg agents
-            # history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
-            # history_LRRL = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
+            # Training maddpg agents
+            history_regular = train_agents_regular.training(load=True, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)
+            history_LRRL = train_agents_LRRL.training(load=True, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True)
 
-            # with open('results/results_convergence.pickle', 'wb+') as f:
-            #     # pickle.dump([history_regular], f)
-            #     pickle.dump([history_regular, history_LRRL], f)
+            with open('results/results_convergence.pickle', 'wb+') as f:
+                # pickle.dump([history_regular], f)
+                pickle.dump([history_regular, history_LRRL], f)
 
-            # # Testing the robustness
-            # test_regular_noise = train_agents_regular.testing(render=False, noisy=True)
-            # test_LRRL_noise = train_agents_LRRL.testing(render=False, noisy=True)
+            # Testing the robustness
+            test_regular_noise = train_agents_regular.testing(render=False, noisy=True)
+            test_LRRL_noise = train_agents_LRRL.testing(render=False, noisy=True)
 
-            # with open('results/results_noise_test.pickle', 'wb+') as f:
-            #     pickle.dump([test_regular_noise, test_LRRL_noise], f)
+            with open('results/results_noise_test.pickle', 'wb+') as f:
+                pickle.dump([test_regular_noise, test_LRRL_noise], f)
 
             # Training gammanet
             train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=False)
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             std_LRRL = np.std(history, axis=0)
 
             # Testing EDI for different alphas
-            zeta = [1,10,100,500,1000]
+            zeta = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]
             for z in zeta:
                 history = train_agents_regular.testing(edi_mode='test', render=False, zeta=z, lexi_mode=False)
                 mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))

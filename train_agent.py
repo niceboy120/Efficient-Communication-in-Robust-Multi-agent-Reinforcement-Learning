@@ -61,7 +61,7 @@ class Train:
         self.memory = MultiAgentReplayBuffer(100000, critic_dims, actor_dims, 
                             self.n_actions, self.n_agents, batch_size=1024)
         
-        self.gamma_input_dims = self.env.observation_space[1].shape[0]
+        self.gamma_input_dims = self.env.observation_space[self.cooperating_agents_mask[0]].shape[0]
         
 
 
@@ -155,13 +155,13 @@ class Train:
                 obs = obs_
                 episode_sequence.append(obs)
 
-                score[0] += np.average(reward[0:self.n_adversaries])
-                score[1] += np.average(reward[self.n_adversaries:])
+                score[0] += np.sum(reward[0:self.n_adversaries])
+                score[1] += np.sum(reward[self.n_adversaries:])
                 total_steps += 1
                 episode_step += 1
 
             if edi_mode=='train':
-                self.gammanet.learn(episode_sequence, self.cooperating_agents_mask, self.pos_others_mask, self.pos_mask)
+                self.gammanet.learn(episode_sequence, self.cooperating_agents_mask)
             
             if log:
                 self.writer.add_scalar("score adversaries", score[0], i)

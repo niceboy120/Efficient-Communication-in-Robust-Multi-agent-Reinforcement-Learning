@@ -43,7 +43,10 @@ class MultiAgentEnv(gym.Env):
             total_action_space = []
             # physical action space
             if self.discrete_action_space:
-                u_action_space = spaces.Discrete(2)
+                if self.env != 'simple_tag_elisa' and self.env != 'simple_tag_webots':
+                    u_action_space = spaces.Discrete(world.dim_p * 2 + 1)
+                else:
+                    u_action_space = spaces.Discrete(2)
             else:
                 u_action_space = spaces.Box(low=-agent.u_range, high=+agent.u_range, shape=(world.dim_p,), dtype=np.float32)
             if agent.movable:
@@ -90,18 +93,12 @@ class MultiAgentEnv(gym.Env):
         # advance world state
         self.world.step()
         # record observation for each agent
-        advs = 0
-
         for agent in self.agents:   
             obs_n.append(self._get_obs(agent))
 
             if agent.adversary:
-                if advs==0:
-                    out_rew_adv, out_col_adv = self._get_reward(agent, reward_mode)
-                    reward_n.append(out_rew_adv)
-                else:
-                    reward_n.append(out_rew_adv)
-                advs += 1
+                out_rew_adv, out_col_adv = self._get_reward(agent, reward_mode)
+                reward_n.append(out_rew_adv)
             else:
                 out_rew, col = self._get_reward(agent, reward_mode)
                 reward_n.append(out_rew)           

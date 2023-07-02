@@ -12,7 +12,7 @@ class GammaNet(nn.Module):
         
         self.chkpt_file = os.path.join(chkpt_dir, name)
 
-        self.fc1 = nn.Linear(input_dims*2, fc1_dims)
+        self.fc1 = nn.Linear(input_dims*2+1, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
         self.fc3 = nn.Linear(fc2_dims, fc3_dims)
         self.Gam = nn.Linear(fc2_dims, 1)
