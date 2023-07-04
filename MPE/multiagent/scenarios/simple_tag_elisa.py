@@ -22,7 +22,7 @@ class Scenario(BaseScenario):
             agent.size = 0.075 if agent.adversary else 0.05
             agent.accel = 3.0 if agent.adversary else 4
             #agent.accel = 20.0 if agent.adversary else 25.0
-            agent.max_speed = 1.0 if agent.adversary else 1.3
+            agent.max_speed = 0.546 if agent.adversary else 0.546
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
@@ -138,7 +138,7 @@ class Scenario(BaseScenario):
             if adv.collide:
                 for ag in agents: 
                     if self.is_collision(ag, adv):
-                        rew += 50
+                        rew += 10
 
         pos = None
         for adv in adversaries:

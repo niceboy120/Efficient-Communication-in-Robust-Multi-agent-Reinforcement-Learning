@@ -1,4 +1,6 @@
 import numpy as np
+from MPC.car import Car
+from MPC.controller import MPC, PID, BEUN
 
 # physical/external base state of all entites
 class EntityState(object):
@@ -77,6 +79,13 @@ class Agent(Entity):
         self.action = Action()
         # script behavior to execute
         self.action_callback = None
+        # Car object
+        self.car = Car(0,0)
+        # MPC object
+        self.horizon = 10
+        self.controller = MPC(self.horizon)
+        # self.controller = PID(horizon=self.horizon)
+        self.controller = BEUN(self.horizon)
 
 # multi-agent world
 class World(object):
@@ -92,7 +101,7 @@ class World(object):
         # color dimensionality
         self.dim_color = 3
         # simulation timestep
-        self.dt = 0.1
+        self.dt = 0.25
         # physical damping
         self.damping = 0.25
         # contact response parameters
@@ -116,7 +125,11 @@ class World(object):
 
     # update state of the world
     def step(self):
-        if self.env != 'simple_tag_elisa' and self.env != 'simple_tag_webots':
+        if self.env == 'simple_tag_elisa':
+            self.update_agent_elisa()
+        # elif self.env == 'simple_tag_mpc':
+
+        else:
             # set actions for scripted agents 
             for agent in self.scripted_agents:
                 agent.action = agent.action_callback(agent, self)
@@ -131,9 +144,28 @@ class World(object):
             # update agent state
             for agent in self.agents:
                 self.update_agent_state(agent)
+            
+            if self.env == 'simple_tag_mpc':
+                self.update_agent_mpc()
 
-        else:
-            self.update_agent_elisa()
+
+    def update_agent_mpc(self):      
+        for idx, agent in enumerate(self.agents):
+            waypoints = [agent.state.p_pos.tolist()] * agent.controller.horizon
+            # waypoints = [[-0.5,-0.5]] * agent.controller.horizon
+            for i in range(agent.controller.horizon):
+                x, _, _ = agent.car.get_state()
+                # linear_v, angular_v = agent.controller.optimize(car=agent.car, points=waypoints, dt=self.dt/agent.controller.horizon)
+                # linear_v, angular_v = agent.controller.get_control_inputs(x, waypoints[i], agent.car.get_points()[2])
+                linear_v, angular_v = agent.controller.get_control_inputs(x, waypoints[i])
+                agent.car.set_robot_velocity(linear_v, angular_v)
+                agent.car.update(self.dt/agent.controller.horizon)
+            x, _, p_vel = agent.car.get_state()
+            agent.state.p_pos = np.array([x[0, 0],x[1, 0]])
+            agent.state.p_vel = np.array([p_vel[0][0],p_vel[1][0]])
+                
+            for p in range(self.dim_p):
+                agent.state.p_pos[p] = self.bound(agent.state.p_pos[p])
 
     # gather agent action forces
     def apply_action_force(self, p_force):
@@ -173,16 +205,8 @@ class World(object):
                                                                   np.square(entity.state.p_vel[1])) * entity.max_speed
             entity.state.p_pos += entity.state.p_vel * self.dt
 
-            def bound(x):
-                if x < 1.0 and x > -1.0:
-                    return x
-                elif x >= 1.0:
-                    return 1.0
-                elif x <= -1.0:
-                    return -1.0
-                
             for p in range(self.dim_p):
-                entity.state.p_pos[p] = bound(entity.state.p_pos[p])
+                entity.state.p_pos[p] = self.bound(entity.state.p_pos[p])
 
     def update_agent_elisa(self):
         wheelbase = 0.04
@@ -207,17 +231,8 @@ class World(object):
 
             agent.state.p_vel = (arc_avg/self.dt)*np.array([np.cos(agent.state.p_rot[0]), np.sin(agent.state.p_rot[0])])
 
-            
-            def bound(x):
-                if x < 1.0 and x > -1.0:
-                    return x
-                elif x >= 1.0:
-                    return 1.0
-                elif x <= -1.0:
-                    return -1.0
-                
             for p in range(self.dim_p):
-                agent.state.p_pos[p] = bound(agent.state.p_pos[p])
+                agent.state.p_pos[p] = self.bound(agent.state.p_pos[p])
 
     def update_agent_state(self, agent):
         # set communication state (directly for now)
@@ -250,3 +265,12 @@ class World(object):
         force_a = +force if entity_a.movable else None
         force_b = -force if entity_b.movable else None
         return [force_a, force_b]
+    
+
+    def bound(self, x):
+        if x < 1.0 and x > -1.0:
+            return x
+        elif x >= 1.0:
+            return 1.0
+        elif x <= -1.0:
+            return -1.0

@@ -12,24 +12,28 @@ class MADDPG:
         self.agents = []
         self.n_agents = n_agents
         self.n_actions = n_actions
-        chkpt_dir += scenario 
         for agent_idx in range(self.n_agents):
             self.agents.append(Agent(actor_dims[agent_idx], critic_dims,  
                             n_actions, n_agents, agent_idx, noise_mode, lr_actor=lr_actor, lr_critic=lr_critic,
-                            chkpt_dir=chkpt_dir))
+                            chkpt_dir=chkpt_dir, scenario=scenario))
         self.scaler = GradScaler()
+        self.scenario = scenario
+        self.chkpt_dir = chkpt_dir
         
 
     def save_checkpoint(self):
-        print('... saving checkpoint ...')
+        print('... saving checkpoint at ', self.chkpt_dir+self.scenario, ' ...')
         for agent in self.agents:
             agent.save_models()
 
-    def load_checkpoint(self, load_mask):
-        print('... loading checkpoint ...')
+    def load_checkpoint(self, load_mask, load_alt_location=None):
+        if load_alt_location == None:
+            print('... loading checkpoint from ', self.chkpt_dir+self.scenario, ' ...')
+        else:
+            print('... loading checkpoint from ', self.chkpt_dir+load_alt_location, ' ...')
         for i, agent in enumerate(self.agents):
             if i in load_mask:
-                agent.load_models()
+                agent.load_models(load_alt_location)
 
     def choose_action(self, raw_obs, greedy, eps, ratio, decreasing_eps):
         actions = []

@@ -8,7 +8,7 @@ class HyperParameters:
         self.lexi_activate_episode_threshold = 30000
         self.print_interval = 500
         self.autosave_interval = 1000
-        self.max_steps = 50
+        self.max_steps = 60
         self.eps = 0.9
         self.gamma_batch_size = 32
         self.gamma = 0.99

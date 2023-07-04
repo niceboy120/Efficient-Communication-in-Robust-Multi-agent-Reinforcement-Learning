@@ -6,7 +6,7 @@ from LRRL.lexicographic import LexicographicWeights
 from LRRL.noise_generator import NoiseGenerator
 
 class Agent:
-    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, noise_mode, chkpt_dir,
+    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, noise_mode, chkpt_dir, scenario,
                     lr_actor=0.01, lr_critic=0.01, fc1=64, 
                     fc2=64, gamma=0.95, tau=0.01):
         self.gamma = gamma
@@ -14,16 +14,16 @@ class Agent:
         self.n_actions = n_actions
         self.agent_name = 'agent_%s' % agent_idx
         self.actor = ActorNetwork(lr_actor, actor_dims, fc1, fc2, n_actions, 
-                                  chkpt_dir=chkpt_dir,  name=self.agent_name+'_actor')
+                                  chkpt_dir=chkpt_dir, scenario=scenario, name=self.agent_name+'_actor')
         self.critic = CriticNetwork(lr_critic, critic_dims, 
                             fc1, fc2, n_agents, n_actions, 
-                            chkpt_dir=chkpt_dir, name=self.agent_name+'_critic')
+                            chkpt_dir=chkpt_dir, scenario=scenario, name=self.agent_name+'_critic')
         self.target_actor = ActorNetwork(lr_actor, actor_dims, fc1, fc2, n_actions,
-                                        chkpt_dir=chkpt_dir, 
+                                        chkpt_dir=chkpt_dir, scenario=scenario, 
                                         name=self.agent_name+'_target_actor')
         self.target_critic = CriticNetwork(lr_critic, critic_dims, 
                                             fc1, fc2, n_agents, n_actions,
-                                            chkpt_dir=chkpt_dir,
+                                            chkpt_dir=chkpt_dir, scenario=scenario,
                                             name=self.agent_name+'_target_critic')
         
 
@@ -96,8 +96,8 @@ class Agent:
         self.critic.save_checkpoint()
         self.target_critic.save_checkpoint()
 
-    def load_models(self):
-        self.actor.load_checkpoint()
-        self.target_actor.load_checkpoint()
-        self.critic.load_checkpoint()
-        self.target_critic.load_checkpoint()
+    def load_models(self, load_alt_location):
+        self.actor.load_checkpoint(alternative_location=load_alt_location)
+        self.target_actor.load_checkpoint(alternative_location=load_alt_location)
+        self.critic.load_checkpoint(alternative_location=load_alt_location)
+        self.target_critic.load_checkpoint(alternative_location=load_alt_location)

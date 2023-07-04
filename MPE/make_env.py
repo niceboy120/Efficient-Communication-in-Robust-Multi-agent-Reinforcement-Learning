@@ -33,7 +33,10 @@ def make_env(scenario_name, benchmark=False):
     import MPE.multiagent.scenarios as scenarios
 
     # load scenario from script
-    scenario = scenarios.load(scenario_name + ".py").Scenario()
+    if scenario_name == 'simple_tag_mpc':
+        scenario = scenarios.load("simple_tag" + ".py").Scenario()
+    else:    
+        scenario = scenarios.load(scenario_name + ".py").Scenario()
     # create world
     world = scenario.make_world(scenario_name)
     # create multiagent environment

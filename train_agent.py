@@ -35,7 +35,7 @@ class Train:
 
 
         # CHANGE THIS 
-        if scenario=='simple_tag':
+        if scenario=='simple_tag' or scenario=='simple_tag_mpc':
             self.pos_mask = [2,3]
             self.pos_others_mask = list(range(4, 4+(self.n_adversaries-1)*2))
         elif scenario=='simple_adversary':
@@ -65,7 +65,7 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy):
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location):
         self.print_start_message(is_testing, edi_mode, lexi_mode, zeta)
 
         if edi_mode!='disabled':
@@ -80,7 +80,7 @@ class Train:
 
         if is_testing:
             load = True
-        self.load_nets(load, edi_load, load_adversaries)            
+        self.load_nets(load, edi_load, load_adversaries, load_alt_location)            
 
         if N_games == None:
             if edi_mode=='train':
@@ -210,25 +210,25 @@ class Train:
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location)
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location)
         return history
 
 
@@ -261,7 +261,7 @@ class Train:
                 print("Invalid reply, please respond y or n")
 
 
-    def load_nets(self, load, edi_load, load_adversaries):
+    def load_nets(self, load, edi_load, load_adversaries, load_alt_location):
         load_mask = []
         for i in range(self.n_agents):
             if not self.env.world.agents[i].adversary:
@@ -270,7 +270,7 @@ class Train:
                 load_mask.append(i)
 
         if load:
-            self.maddpg_agents.load_checkpoint(load_mask)
+            self.maddpg_agents.load_checkpoint(load_mask, load_alt_location)
 
         if edi_load:
             self.gammanet.load()
@@ -337,6 +337,8 @@ class Train:
         else:
             msg3 = ""
         
-        msg = msg1+msg2+msg3
+        msg4 = ", for scenario: "+self.scenario
+
+        msg = msg1+msg2+msg3+msg4
         print(msg)
 
