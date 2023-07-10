@@ -49,17 +49,17 @@ class MADDPG:
             actions.append(action)
         return actions
     
-    def eval_choose_action_noisy(self, raw_obs):
+    def eval_choose_action_noisy(self, raw_obs, noise_mode):
         actions = []
         for agent_idx, agent in enumerate(self.agents):
-            action = agent.eval_choose_action_noisy(raw_obs[agent_idx])
+            action = agent.eval_choose_action_noisy(raw_obs[agent_idx], noise_mode)
             actions.append(action)
         return actions
     
     def clear_cache(self):
         T.cuda.empty_cache()
 
-    def learn(self, memory, lexi_mode, robust_actor_loss, writer=None, i=None):
+    def learn(self, memory, lexi_mode, robust_actor_loss, writer=None, i=None, noise_mode=None):
         if not memory.ready():
             return
 
@@ -123,15 +123,15 @@ class MADDPG:
 
             agent.critic.eval()
             actor_loss = agent.critic.forward(states, mu).flatten()
-            actor_loss = -T.mean(actor_loss)
+            actor_loss = -T.mean(actor_loss) # Mean in case of stochastic policy??? or because we sample multiple states at a time maybe
 
             if lexi_mode:
                 w = agent.lexicographic_weights.compute_weights()
 
                 if robust_actor_loss:
-                    robust_loss = agent.lexicographic_weights.robust_loss_actor(T.tensor(np.array(actor_states[agent_idx]), dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent)
+                    robust_loss = agent.lexicographic_weights.robust_loss_actor(T.tensor(np.array(actor_states[agent_idx]), dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent, device, noise_mode)
                 else:
-                    robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent, device)                
+                    robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent, device, noise_mode)                
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
 
                 if writer is not None:

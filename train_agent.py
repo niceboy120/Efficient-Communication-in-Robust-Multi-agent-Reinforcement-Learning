@@ -65,8 +65,8 @@ class Train:
         
 
 
-    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location):
-        self.print_start_message(is_testing, edi_mode, lexi_mode, zeta)
+    def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location, noise_mode):
+        self.print_start_message(is_testing, edi_mode, lexi_mode, zeta, noisy)
 
         if edi_mode!='disabled':
             self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, self.scenario, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
@@ -129,7 +129,7 @@ class Train:
                     if not noisy:
                         actions = self.maddpg_agents.eval_choose_action(obs)
                     else:
-                        actions = self.maddpg_agents.eval_choose_action_noisy(obs)
+                        actions = self.maddpg_agents.eval_choose_action_noisy(obs, noise_mode)
                 else:
                     actions = self.maddpg_agents.choose_action(obs, greedy, self.par.eps, i/N_games, decreasing_eps) 
                 # print(actions)
@@ -147,9 +147,9 @@ class Train:
                     self.memory.store_transition(obs, state, actions, reward, obs_, state_, done)
                     if total_steps % 100 == 0:
                         if log:
-                            self.maddpg_agents.learn(self.memory, lexi_mode_active, robust_actor_loss, self.writer, i)
+                            self.maddpg_agents.learn(self.memory, lexi_mode_active, robust_actor_loss, self.writer, i, noise_mode=noise_mode)
                         else:
-                            self.maddpg_agents.learn(self.memory, lexi_mode_active, robust_actor_loss)
+                            self.maddpg_agents.learn(self.memory, lexi_mode_active, robust_actor_loss, noise_mode=noise_mode)
                         self.maddpg_agents.clear_cache()
 
                 obs = obs_
@@ -205,30 +205,30 @@ class Train:
         if log:
             self.writer.flush()
             self.writer.close()
-        return history
+        return history, episode_sequence
             
 
 
 
-    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None):
+    def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None, noise_mode=None):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = False
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location, noise_mode)
         return history
     
 
-    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None):
+    def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None, noise_mode=None):
         if edi_mode=='disabled':
             edi_load = False
 
         is_testing = True
         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
             raise Exception('Invalid mode for edi_mode selected')
-        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location)
+        history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location, noise_mode)
         return history
 
 
@@ -318,7 +318,7 @@ class Train:
     def clear_buffer(self):
         self.memory.init_actor_memory()
 
-    def print_start_message(self, is_testing, edi_mode, lexi_mode, zeta):
+    def print_start_message(self, is_testing, edi_mode, lexi_mode, zeta, noisy):
         print("\n","===============================================================================\n", datetime.datetime.now())
         if not is_testing:
             msg1 = "Training "
@@ -330,15 +330,20 @@ class Train:
         else:
             msg2 = "lexicographic policy"
 
-        if edi_mode == 'train':
-            msg3 = ", training gammanet"
-        elif edi_mode == 'test':
-            msg3 = ", testing gammanet with zeta = "+str(zeta)
+        if noisy:
+            msg3 = " with noise (mode = "+str(self.par.noise_mode)+")"
         else:
-            msg3 = ""
-        
-        msg4 = ", for scenario: "+self.scenario
+            msg3 = " without noise"
 
-        msg = msg1+msg2+msg3+msg4
+        if edi_mode == 'train':
+            msg4 = ", training gammanet"
+        elif edi_mode == 'test':
+            msg4 = ", testing gammanet with zeta = "+str(zeta)
+        else:
+            msg4 = ""
+        
+        msg5 = ", for scenario: "+self.scenario
+
+        msg = msg1+msg2+msg3+msg4+msg5
         print(msg)
 

@@ -42,10 +42,10 @@ class LexicographicWeights():
         first_order_weights = T.tensor(first_order)
         return first_order_weights
 
-    def robust_loss_actor(self, states, actions, agent):
+    def robust_loss_actor(self, states, actions, agent, device, noise_mode=None):
         agent.actor.eval()
-        disturbed = self.noise.nu(states)
-        disturbed_actions = agent.actor.forward(disturbed)
+        disturbed = self.noise.nu(states, noise_mode)
+        disturbed_actions = agent.actor.forward(disturbed.to(device))
 
         loss = 0.5 * (actions.detach()-disturbed_actions).pow(2).mean()
         
@@ -55,14 +55,14 @@ class LexicographicWeights():
 
         return loss
     
-    def robust_loss_critic(self, states, actions, agent, device):
+    def robust_loss_critic(self, states, actions, agent, device, noise_mode=None):
         # Question.. same actions even though state is disturbed, or actions determined by a disturbed state in the same state????
 
-        disturbed = self.noise.nu(states)
+        disturbed = self.noise.nu(states, noise_mode)
 
         agent.critic.eval()
         Q = agent.critic.forward(states.detach(), actions).flatten()
-        Q_disturbed = agent.critic.forward(disturbed.to(device).detach, actions).flatten()
+        Q_disturbed = agent.critic.forward(disturbed.to(device).detach(), actions).flatten()
         loss = 0.5 * (Q.detach() - Q_disturbed).pow(2).mean()
                 
         # loss = self.coeff*loss     

@@ -22,7 +22,7 @@ class DataSet:
                 zeta = sum(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask)) - sum(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
                 for l,k in enumerate(cooperating_agents_mask):
                     gamma = np.linalg.norm(sequence[i][k]-sequence[j][k])
-                    io.append([np.concatenate((sequence[i][k], sequence[j][k], np.array([zeta]))), gamma])
+                    io.append([np.concatenate((sequence[i][k], sequence[j][k])), [zeta], gamma])
 
         # One line of IO is a set of two observations of the same agent and their corresponding Qdiff/gamma
         return io

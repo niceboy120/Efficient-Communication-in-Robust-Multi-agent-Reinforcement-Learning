@@ -40,18 +40,35 @@ import numpy as np
 
 
 
-with open('results/results_edi.pickle', 'rb') as f:
+# with open('results/results_edi.pickle', 'rb') as f:
+#     data = pickle.load(f)
+
+# fig,ax = plt.subplots()
+# ax.plot(data[0], data[1][1:,0], color="red", marker="o")
+# ax.plot(data[0], data[3][1:,0], color="tomato", marker="o", linestyle="--")
+# ax.set_xlabel("alpha", fontsize=14)
+# ax.set_ylabel("score", color="red", fontsize=14)
+
+# ax2=ax.twinx()
+# ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
+# ax2.plot(data[0], data[3][1:,2], color="cornflowerblue", marker="o", linestyle="--")
+# ax2.set_ylabel("communications", color="blue", fontsize=14)
+# plt.title("Number of communications and score for different alpha values")
+# plt.show()
+
+
+with open('results/results_noise_test.pickle', 'rb') as f:
     data = pickle.load(f)
 
-fig,ax = plt.subplots()
-ax.plot(data[0], data[1][1:,0], color="red", marker="o")
-ax.plot(data[0], data[3][1:,0], color="tomato", marker="o", linestyle="--")
-ax.set_xlabel("alpha", fontsize=14)
-ax.set_ylabel("score", color="red", fontsize=14)
 
-ax2=ax.twinx()
-ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
-ax2.plot(data[0], data[3][1:,2], color="cornflowerblue", marker="o", linestyle="--")
-ax2.set_ylabel("communications", color="blue", fontsize=14)
-plt.title("Number of communications and score for different alpha values")
-plt.show()
+mean = []
+std = []
+dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "LRRL1(T2) no noise", "LRRL2(T1) no noise", "LRRL2(T2) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 ", "LRRL1(T2) noise 1 ", "LRRL1(T2) noise 2 ", "LRRL2(T1) noise 1 ", "LRRL2(T1) noise 2 ", "LRRL2(T2) noise 1 ", "LRRL2(T2) noise 2 "]
+for i in range(len(data)):
+    score = []
+    for j in range(len(data[i])):
+        score.append(data[i][j][0])
+    mean.append(np.mean(score))
+    std.append(np.std(score))
+    print(dic[i], ", mean: %.3f, std: %.3f" % (mean[i], std[i]))
+

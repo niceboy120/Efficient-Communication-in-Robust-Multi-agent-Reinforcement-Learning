@@ -57,10 +57,10 @@ class Agent:
 
         return actions.detach().cpu().numpy()[0]
     
-    def eval_choose_action_noisy(self, observation):
+    def eval_choose_action_noisy(self, observation, noise_mode=None):
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.target_actor.device)
-        disturbed = self.noise.nu(state)
-        actions = self.target_actor.forward(disturbed)
+        disturbed = self.noise.nu(state, noise_mode)
+        actions = self.target_actor.forward(disturbed.to(self.target_actor.device))
 
         return actions.detach().cpu().numpy()[0]
 

@@ -12,8 +12,11 @@ class GammaNet(nn.Module):
         
         self.chkpt_file = os.path.join(chkpt_dir, name)
 
-        self.fc1 = nn.Linear(input_dims*2+1, fc1_dims)
+        self.fc1 = nn.Linear(input_dims*2, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
+
+        self.fzeta = nn.Linear(1, fc2_dims)
+
         self.fc3 = nn.Linear(fc2_dims, fc3_dims)
         self.Gam = nn.Linear(fc2_dims, 1)
 
@@ -22,9 +25,13 @@ class GammaNet(nn.Module):
 
         self.to(self.device)
 
-    def forward(self, input):
+    def forward(self, input, zeta):
         x = F.relu(self.fc1(input))
         x = F.relu(self.fc2(x))
+
+        zeta = F.relu(self.fzeta(zeta))
+        x = zeta*x
+
         x = F.relu(self.fc3(x))
         Gam = self.Gam(x)
 

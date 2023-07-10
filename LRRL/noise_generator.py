@@ -35,8 +35,11 @@ class NoiseGenerator:
         #     self.minbound = -self.bound
         # self.k = 0.5*(self.bound-self.minbound)
 
-    def nu(self,x):
-        if self.mode == 0:
+    def nu(self, x, mode=None):
+        if mode==None:
+            mode = self.mode
+
+        if mode == 0:
             # # Uniform unbounded noise
             # if self.image:
             #     noise = np.zeros_like(x)
@@ -53,7 +56,7 @@ class NoiseGenerator:
             #         else: noise[i] = xi
             raise NotImplementedError
 
-        elif self.mode == 1:
+        elif mode == 1:
             # Uniform bounded noise
             noise = T.rand_like(x)-0.5
             return x.detach() + 0.2*self.bound*noise.detach()
@@ -61,9 +64,10 @@ class NoiseGenerator:
             #     noise[i] = np.clip(np.add(np.random.uniform(self.bound, self.minbound, self.shape),np.asarray(xi)),
             #                        self.low,self.high)if np.random.uniform() > self.p_uniform else xi
             # return torch.tensor(noise)
-        elif self.mode == 2:
+        elif mode == 2:
+            # Gaussian noise
             x = x.detach().cpu().numpy()
             noise = np.zeros_like(x)
             for i,xi in enumerate(x):
                 noise[i] = np.clip(np.random.normal(0, self.var), -self.bound, self.bound)
-            return T.tensor(x+noise)
+            return T.tensor(x+noise).detach()
