@@ -15,7 +15,7 @@ if __name__ == '__main__':
         try:
             ENV = 'simple_tag' # 1: simple_tag, 2: simple_tag_elisa, 3: simple_tag_mpc, 3: webots
 
-            # train_agents_regular = Train(ENV, chkpt_dir='/trained_nets/regular/')
+            train_agents_regular = Train(ENV, chkpt_dir='/trained_nets/regular/')
             # train_agents_LRRL = Train(ENV, chkpt_dir='/trained_nets/LRRL/')
             # train_agents_LRRL2 = Train(ENV, chkpt_dir='/trained_nets/LRRL2/')
             # train_agents_LRRL3 = Train(ENV, chkpt_dir='/trained_nets/LRRL3/')
@@ -78,10 +78,10 @@ if __name__ == '__main__':
 
             
 
-            # # Testing with EDI disabled
-            # history = train_agents_regular.testing(edi_mode='disabled', render=False, lexi_mode=False)
-            # mean_regular = np.mean(history, axis=0)
-            # std_regular = np.std(history, axis=0)
+            # Testing with EDI disabled
+            history = train_agents_regular.testing(edi_mode='disabled', render=False, lexi_mode=False)
+            mean_regular = np.mean(history, axis=0)
+            std_regular = np.std(history, axis=0)
 
             # history = train_agents_LRRL.testing(edi_mode='disabled', render=False, lexi_mode=True)
             # mean_LRRL = np.mean(history, axis=0)
@@ -94,14 +94,14 @@ if __name__ == '__main__':
                 mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
                 std_regular = np.vstack((std_regular, np.std(history, axis=0)))
 
-                history = train_agents_LRRL.testing(edi_mode='test', render=False, zeta=z, lexi_mode=True)
-                mean_LRRL = np.vstack((mean_LRRL, np.mean(history, axis=0)))
-                std_LRRL = np.vstack((std_LRRL, np.std(history, axis=0)))
+                # history = train_agents_LRRL.testing(edi_mode='test', render=False, zeta=z, lexi_mode=True)
+                # mean_LRRL = np.vstack((mean_LRRL, np.mean(history, axis=0)))
+                # std_LRRL = np.vstack((std_LRRL, np.std(history, axis=0)))
 
             # Dumping output
             with open('results/results_edi.pickle', 'wb+') as f:
-                # pickle.dump([alpha, mean_regular, std_regular],f)
-                pickle.dump([zeta, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
+                pickle.dump([zeta, mean_regular, std_regular],f)
+                # pickle.dump([zeta, mean_regular, std_regular, mean_LRRL, std_LRRL],f)
 
                 
         except KeyboardInterrupt:
