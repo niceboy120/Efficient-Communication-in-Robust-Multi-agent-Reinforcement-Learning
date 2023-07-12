@@ -62,14 +62,12 @@ class Train:
                             self.n_actions, self.n_agents, batch_size=1024)
         
         self.gamma_input_dims = self.env.observation_space[self.cooperating_agents_mask[0]].shape[0]
+        self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, self.scenario, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
         
 
 
     def run_episodes(self, is_testing, edi_mode, load, load_adversaries, edi_load, render, zeta, greedy, decreasing_eps, N_games, lexi_mode, robust_actor_loss, log, noisy, load_alt_location, noise_mode):
-        self.print_start_message(is_testing, edi_mode, lexi_mode, zeta, noisy)
-
-        if edi_mode!='disabled':
-            self.gammanet = NetUtilities(self.maddpg_agents, self.gamma_input_dims, self.scenario, batch_size = self.par.gamma_batch_size, chkpt_dir=self.chkpt_dir)
+        self.print_start_message(is_testing, edi_mode, lexi_mode, zeta, noisy)            
         
         if log:
             self.writer = SummaryWriter()

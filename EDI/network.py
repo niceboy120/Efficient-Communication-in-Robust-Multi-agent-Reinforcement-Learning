@@ -33,7 +33,7 @@ class GammaNet(nn.Module):
         x = zeta*x
 
         x = F.relu(self.fc3(x))
-        Gam = self.Gam(x)
+        Gam = F.relu(self.Gam(x))
 
         return Gam
 

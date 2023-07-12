@@ -141,6 +141,7 @@ class MADDPG:
                     writer.add_scalar("weight 2", w[1], i)
                 
                 loss = actor_loss + robust_loss*(w[1]/w[0])
+                # loss = robust_loss
 
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())
