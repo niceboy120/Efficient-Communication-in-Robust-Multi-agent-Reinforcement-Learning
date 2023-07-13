@@ -1,14 +1,14 @@
 import numpy as np
 
 class Car:
-    def __init__(self, x, y):
+    def __init__(self, x, y, phi = np.pi/2):
         self.b = 0.02
         self.r = 0.0042
 		
         self.x = np.array([
                             [x],
                             [y],
-                            [np.pi/2]
+                            [phi]
                             ])
 
         self.x_dot = np.array([
@@ -66,6 +66,8 @@ class Car:
                                         [angular_velocity]
                                     ])
         self.wheel_speed = self.inverse_kinematics()
+        self.wheel_speed[self.wheel_speed>130] = 130
+        self.wheel_speed[self.wheel_speed<-130] = -130
 
 
     def update_state(self, dt):
@@ -92,8 +94,6 @@ class Car:
 
 
     def update(self, dt):
-        self.wheel_speed[self.wheel_speed>130] = 130
-        self.wheel_speed[self.wheel_speed<-130] = -130
         self.x_dot = self.forward_kinematics()
         self.update_state(dt)
         self.wheel_speed = self.inverse_kinematics()

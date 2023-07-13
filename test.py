@@ -7,7 +7,7 @@ obs = env.reset()
 
 for i in range(10):
     env.render()
-    print(obs)
+    print(obs[0])
     no_op = np.random.rand(5)
     action = [no_op, no_op, no_op]
     obs, reward, done, info, n = env.step(action)

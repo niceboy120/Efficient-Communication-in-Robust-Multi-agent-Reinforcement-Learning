@@ -1,0 +1,81 @@
+#VRML_SIM R2023a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/robots/gctronic/elisa/protos/Elisa3.proto"
+
+WorldInfo {
+  info [
+    "The model of the Elisa-3 robot"
+  ]
+  title "Elisa-3"
+}
+Viewpoint {
+  orientation -0.47713785526727615 0.4698676112048251 0.7426734780585712 1.8589052652609783
+  position -0.08569939798545928 -1.4207661222833723 2.9156829088822396
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 2 2
+}
+DEF ELISA3-1 Elisa3 {
+  translation -0.0742 -0.0247 -0.0004
+  rotation 0 0 1 2.412169
+  name "adv1"
+  controller "adv1"
+  controllerArgs [
+    "255"
+    "255"
+    "0"
+  ]
+  extensionSlot [
+    GPS {
+      name "gps_adv1"
+    }
+    Compass {
+      name "compass_adv1"
+    }
+  ]
+}
+DEF ELISA3-2 Elisa3 {
+  translation 0.2836 -0.3451 -0.0004
+  rotation 0 0 1 -2.138268
+  name "adv2"
+  controller "adv2"
+  controllerArgs [
+    "255"
+    "0"
+    "0"
+  ]
+  extensionSlot [
+    Compass {
+      name "compass_adv2"
+    }
+    GPS {
+      name "gps_adv2"
+    }
+  ]
+}
+DEF ELISA3-3 Elisa3 {
+  translation 0.2419 0.3466 -0.0004
+  rotation 0 0 1 -2.101221
+  name "agent"
+  controller "agent"
+  controllerArgs [
+    "0"
+    "255"
+    "0"
+  ]
+  extensionSlot [
+    Compass {
+      name "compass_agent"
+    }
+    GPS {
+      name "gps_agent"
+    }
+  ]
+}
