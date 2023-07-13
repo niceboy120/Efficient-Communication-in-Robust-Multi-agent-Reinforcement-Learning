@@ -14,9 +14,6 @@ class GammaNet(nn.Module):
 
         self.fc1 = nn.Linear(input_dims*2, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
-
-        self.fzeta = nn.Linear(1, fc2_dims)
-
         self.fc3 = nn.Linear(fc2_dims, fc3_dims)
         self.Gam = nn.Linear(fc2_dims, 1)
 
@@ -25,13 +22,9 @@ class GammaNet(nn.Module):
 
         self.to(self.device)
 
-    def forward(self, input, zeta):
-        x = F.relu(self.fc1(input))
+    def forward(self, state_1, state_2):
+        x = F.relu(self.fc1(T.cat([state_1, state_2], dim=1)))
         x = F.relu(self.fc2(x))
-
-        zeta = F.relu(self.fzeta(zeta))
-        x = zeta*x
-
         x = F.relu(self.fc3(x))
         Gam = F.relu(self.Gam(x))
 
@@ -42,4 +35,3 @@ class GammaNet(nn.Module):
 
     def load_checkpoint(self):
         self.load_state_dict(T.load(self.chkpt_file))
-

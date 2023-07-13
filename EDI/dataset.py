@@ -19,10 +19,18 @@ class DataSet:
         for i in range(I):
             mu0 = self.get_mu(sequence[i])
             for j in range(i+1, I+1):
-                zeta = sum(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask)) - sum(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
+                # print(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask))
+                # print(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
+
+                Qdiff= np.subtract(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask) , self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
+                gamma = max(sum(Qdiff), max(Qdiff), 0)
+                
+                # gamma = sum(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask)) - sum(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
+                # print(gamma)
+                # print("")
+
                 for l,k in enumerate(cooperating_agents_mask):
-                    gamma = np.linalg.norm(sequence[i][k]-sequence[j][k])
-                    io.append([np.concatenate((sequence[i][k], sequence[j][k])), [zeta], gamma])
+                    io.append([sequence[i][k], sequence[j][k], gamma])
 
         # One line of IO is a set of two observations of the same agent and their corresponding Qdiff/gamma
         return io
@@ -54,3 +62,10 @@ class DataSet:
 
         mu = T.cat([acts for acts in actions], dim=1)
         return mu
+
+
+
+
+    # @ staticmethod
+    # def concat_obs(observation):
+    #     return np.concatenate((observation[0], observation[1], observation[2]))

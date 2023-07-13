@@ -14,15 +14,14 @@ class NetUtilities():
         self.dataset = DataSet(agents)
         self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet', chkpt_dir='EDI'+chkpt_dir+scenario)
 
-    def get_gamma_from_net(self, x1, x2, zeta): # Getting Gamma from the network given two states
+    def get_gamma_from_net(self, x1, x2): # Getting Gamma from the network given two states
         device = self.gammanet.device
 
-        data = np.concatenate((x1, x2))
-        inputs = T.tensor(data, dtype=T.float32).to(device)
-        zeta = T.tensor([zeta], dtype=T.float32).to(device)
+        x1 = T.tensor(np.array([x1]), dtype=T.float32).to(device)
+        x2 = T.tensor(np.array([x2]), dtype=T.float32).to(device)
 
-        gamma = self.gammanet.forward(inputs, zeta)
-        return gamma.detach().cpu().numpy()[0]
+        gamma = self.gammanet.forward(x1, x2)
+        return gamma.detach().cpu().numpy()[0][0]
 
     # def check_communication(): # Check, given a gamma, if the state is too much changed compared with last broadcast
 
@@ -33,17 +32,10 @@ class NetUtilities():
         device = self.gammanet.device
 
         # Create TensorDataset from io
-        inputs = [T.tensor(data[0], dtype=T.float32) for data in io]
-        zeta = [T.tensor(data[1], dtype=T.float32) for data in io]
-        targets = [T.tensor([data[2]], dtype=T.float32) for data in io]
+        inputs = [data [0:2]for data in io]
+        targets = [data[2] for data in io]
 
-        # Convert the lists to tensors and stack them
-        input_tensor = T.stack(inputs)
-        zeta_tensor = T.stack(zeta)
-        target_tensor = T.stack(targets)
-
-        # Create the TensorDataset
-        dataset = TensorDataset(input_tensor.to(device), zeta_tensor.to(device), target_tensor.to(device))
+        dataset = TensorDataset(T.tensor(np.array(inputs), dtype = T.float).to(device), T.tensor(targets, dtype = T.float).to(device))
 
         # Create DataLoader
         batch_size = self.batch_size
@@ -51,21 +43,24 @@ class NetUtilities():
 
         
         # Train the network using batches
-        for inputs, zeta, targets in dataloader:
+        for inputs, targets in dataloader:
             self.gammanet.optimizer.zero_grad()
-            outputs = self.gammanet.forward(inputs, zeta)
-            loss = F.mse_loss(outputs, targets)
+            outputs = self.gammanet.forward(inputs[:, 0], inputs[:, 1])
+            loss = F.mse_loss(outputs, targets.unsqueeze(dim=1))
             loss.backward()
             self.gammanet.optimizer.step()
 
 
-    def communication(self, x1, x2, zeta, print_gamma=False):
-        gamma = self.get_gamma_from_net(x1, x2, zeta)
+    def communication(self, x1, x2, zeta, print_gamma=False, load_net=False):
+        if load_net:
+            self.load()
+            
+        gamma = self.get_gamma_from_net(x1, x2)
 
         if print_gamma:
             print(gamma)
 
-        if np.linalg.norm(x1-x2, np.inf) >= gamma:
+        if gamma > zeta:
             return True 
         else:
             return False
