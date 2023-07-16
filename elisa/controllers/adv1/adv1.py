@@ -1,8 +1,11 @@
-from controller import Robot, DistanceSensor, Motor, GPS, Compass
+from controller import Robot, DistanceSensor, Motor, Receiver
+import numpy as np
 
 import sys
 sys.path.insert(0, '..')
-from MPC.waypoints import WAYPOINT_CONTROLLER
+# from MPC.waypoints import WAYPOINT_CONTROLLER
+from MPC.controller import BEUN
+from MPC.car import Car
 
 
 # time in [ms] of a simulation step
@@ -11,6 +14,8 @@ MAX_SPEED = 130
 
 # create the Robot instance.
 robot = Robot()
+receiver = Receiver('receiver')
+receiver.enable(TIME_STEP)
 
 leftMotor = robot.getDevice('left wheel motor')
 rightMotor = robot.getDevice('right wheel motor')
@@ -19,27 +24,30 @@ rightMotor.setPosition(float('inf'))
 leftMotor.setVelocity(0.0)
 rightMotor.setVelocity(0.0)
 
+light = robot.getDevice('ledrgb')
+light.set(0xff0000)
 
 
 
-
-
+i=0
 # feedback loop: step simulation until receiving an exit event
 while robot.step(TIME_STEP) != -1:
-    # initialize motor speeds at 50% of MAX_SPEED.
-
-    # print(gps.getValues()) #xyz
-    # print(get_bearing_in_degrees()) # clockwise from y/north
+    if receiver.getQueueLength() > 0:
+        message = receiver.getFloats()
+        x = message[0:3]
+        goal = message[3:]
+        receiver.nextPacket()
+    
+    if i==0:
+        car = Car(x[0], x[1], x[2])
+        controller = BEUN(2)    
+    
+    linear_vel, angular_vel = controller.get_control_inputs(np.array([[x[1]],[x[0]],[x[2]]]), goal)
+    car.set_robot_velocity(linear_vel, angular_vel)
     
     
+    rightMotor.setVelocity(car.wheel_speed[0])
+    leftMotor.setVelocity(car.wheel_speed[1])
     
-    controller = WAYPOINT_CONTROLLER()
-    controller.initialize(2, 0, robot, TIME_STEP)
-    
-    controller.set_waypoint(waypoint_adv1 = [0.5, 0.5])
-    
-    wheel_speed = controller.get_wheel_speed()
-    # write actuators inputs
-    rightMotor.setVelocity(wheel_speed[0])
-    leftMotor.setVelocity(wheel_speed[1])
+    i += 1
     

@@ -3,7 +3,7 @@ import numpy as np
 class HyperParameters:
     def __init__(self):
         self.N_games = 50000
-        self.N_games_edi = 2000
+        self.N_games_edi = 1001
         self.N_games_test = 1001
         self.lexi_activate_episode_threshold = 15000
         self.print_interval = 250

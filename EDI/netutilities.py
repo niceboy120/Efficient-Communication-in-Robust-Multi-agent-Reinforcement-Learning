@@ -51,20 +51,22 @@ class NetUtilities():
             self.gammanet.optimizer.step()
 
 
-    def communication(self, x1, x2, zeta, print_gamma=False, load_net=False):
+    def communication(self, x1, x2, zeta, return_gamma=False, load_net=False):
         if load_net:
             self.load()
             
         gamma = self.get_gamma_from_net(x1, x2)
-
-        if print_gamma:
-            print(gamma)
-
-        if gamma > zeta:
-            return True 
+        
+        if return_gamma:
+            if gamma > zeta:
+                return True, gamma 
+            else:
+                return False, gamma
         else:
-            return False
-
+            if gamma > zeta:
+                return True
+            else:
+                return False
 
     def save(self):
         print('... saving gammanet checkpoint ...')
