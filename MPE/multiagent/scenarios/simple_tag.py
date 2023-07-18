@@ -139,7 +139,7 @@ class Scenario(BaseScenario):
             if adv.collide:
                 for ag in agents: 
                     if self.is_collision(ag, adv):
-                        rew += 1
+                        rew += 5
 
         pos = None
         for adv in adversaries:

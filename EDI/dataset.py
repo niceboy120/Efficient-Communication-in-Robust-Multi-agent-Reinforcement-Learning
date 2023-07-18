@@ -22,9 +22,18 @@ class DataSet:
                 # print(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask))
                 # print(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
 
-                Qdiff= np.subtract(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask) , self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
-                gamma = max(sum(Qdiff), max(Qdiff), 0)
+                Q1 = self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask)
+                Q2 = self.get_Q_values(sequence[j], mu0, cooperating_agents_mask)
+                Qdiff= np.subtract(Q1, Q2)
                 
+                
+                
+                # gamma = max(sum(Qdiff), max(Qdiff), 0)
+                gamma = sum(Qdiff)
+
+                # print(Q1, Q2, Qdiff, gamma)
+                # print("")
+
                 # gamma = sum(self.get_Q_values(sequence[j], self.get_mu(sequence[j]), cooperating_agents_mask)) - sum(self.get_Q_values(sequence[j], mu0, cooperating_agents_mask))
                 # print(gamma)
                 # print("")

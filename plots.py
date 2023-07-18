@@ -37,53 +37,62 @@ ENV = 'simple_tag'
 # plt.show()
 
 
-# with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
-#     data = pickle.load(f)
-
-# for i in range(1, len(data)):
-#     data[i] = np.mean(data[i])
-
-# print(data)
-
-
-
-
-# with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
-#     data = pickle.load(f)
-
-# print(data)
-
-# fig,ax = plt.subplots()
-# ax.fill_between(data[0], data[1][1:,0]+data[2][1:,0], data[1][1:,0]-data[2][1:,0], color="red", alpha=0.3)
-# # ax.fill_between(data[0], data[3][1:,0]+data[4][1:,0], data[3][1:,0]-data[4][1:,0], color="tomato", alpha=0.3)
-# ax.plot(data[0], data[1][1:,0], color="red", marker="o", label='Vanilla')
-# # ax.plot(data[0], data[3][1:,0], color="tomato", marker=".", linestyle="--", label='LRRL')
-# ax.set_xlabel("$\zeta_{\mathrm{th}}$", fontsize=14)
-# ax.set_ylabel("score adversaries", color="red", fontsize=14)
-# plt.legend()
-
-# ax2=ax.twinx()
-# ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,2], color="blue", alpha=0.3)
-# # ax2.fill_between(data[0], data[3][1:,2]+data[4][1:,2], data[3][1:,2]-data[4][1:,2], color="cornflowerblue", alpha=0.3)
-# ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
-# # ax2.plot(data[0], data[3][1:,2], color="cornflowerblue", marker=".", linestyle="--")
-# ax2.set_ylabel("communications", color="blue", fontsize=14)
-# plt.title("Number of communications and score for different $\zeta_{\mathrm{th}}$ values")
-# plt.show()
-
-
-with open('results/'+ENV+'/results_noise_test.pickle', 'rb') as f:
+with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
     data = pickle.load(f)
 
+for i in range(1, len(data)):
+    data[i] = np.mean(data[i])
 
-mean = []
-std = []
-dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "LRRL1(T2) no noise", "LRRL2(T1) no noise", "LRRL2(T2) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 ", "LRRL1(T2) noise 1 ", "LRRL1(T2) noise 2 ", "LRRL2(T1) noise 1 ", "LRRL2(T1) noise 2 ", "LRRL2(T2) noise 1 ", "LRRL2(T2) noise 2 "]
-for i in range(len(data)):
-    score = []
-    for j in range(len(data[i])):
-        score.append(data[i][j][0])
-    mean.append(np.mean(score))
-    std.append(np.std(score))
-    print(dic[i], ", mean: %.3f, std: %.3f" % (mean[i], std[i]))
+plt.plot(data[1:])
+plt.show()
+
+
+
+
+with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
+    data = pickle.load(f)
+
+# [zeta, mean_regular, std_regular, worst_regular, mean_LRRL, std_LRRL, worst_LRRL]
+# For all but zeta: 1st column is score adveraries, 2nd is score agents, 3rd is communications. and 1st row is without EDI
+
+from utils import HyperParameters
+par = HyperParameters()
+
+for i in range(len(data[0])):
+    print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[i], data[i]*(1/(1-par.gamma)), data[1][i+1, 0], data[3][i+1, 0]))
+
+fig,ax = plt.subplots()
+ax.fill_between(data[0], data[1][1:,0]+data[2][1:,0], data[1][1:,0]-data[2][1:,0], color="red", alpha=0.3)
+# ax.fill_between(data[0], data[4][1:,0]+data[5][1:,0], data[4][1:,0]-data[5][1:,0], color="tomato", alpha=0.3)
+ax.plot(data[0], data[1][1:,0], color="red", marker="o", label='Vanilla')
+# ax.plot(data[0], data[4][1:,0], color="tomato", marker=".", linestyle="--", label='LRRL')
+ax.set_xlabel("$\zeta_{\mathrm{th}}$", fontsize=14)
+ax.set_ylabel("score adversaries", color="red", fontsize=14)
+plt.legend()
+
+ax2=ax.twinx()
+ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,2], color="blue", alpha=0.3)
+# ax2.fill_between(data[0], data[4][1:,2]+data[5][1:,2], data[4][1:,2]-data[5][1:,2], color="cornflowerblue", alpha=0.3)
+ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
+# ax2.plot(data[0], data[4][1:,2], color="cornflowerblue", marker=".", linestyle="--")
+ax2.set_ylabel("communications", color="blue", fontsize=14)
+plt.title("Number of communications and score for different $\zeta_{\mathrm{th}}$ values")
+plt.show()
+
+
+# with open('results/'+ENV+'/results_noise_test.pickle', 'rb') as f:
+#     data = pickle.load(f)
+
+
+# mean = []
+# std = []
+# dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 "]
+# dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "LRRL1(T2) no noise", "LRRL2(T1) no noise", "LRRL2(T2) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 ", "LRRL1(T2) noise 1 ", "LRRL1(T2) noise 2 ", "LRRL2(T1) noise 1 ", "LRRL2(T1) noise 2 ", "LRRL2(T2) noise 1 ", "LRRL2(T2) noise 2 "]
+# for i in range(len(data)):
+#     score = []
+#     for j in range(len(data[i])):
+#         score.append(data[i][j][0])
+#     mean.append(np.mean(score))
+#     std.append(np.std(score))
+    # print(dic[i], ", mean: %.1f, std: %.1f" % (mean[i], std[i]))
 

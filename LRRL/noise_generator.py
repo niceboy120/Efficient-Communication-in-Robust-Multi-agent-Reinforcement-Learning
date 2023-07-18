@@ -8,7 +8,7 @@ import numpy as np
 
 
 class NoiseGenerator:
-    def __init__(self, variance=0.15, bound=None, mode=1):
+    def __init__(self, variance=0.3, bound=None, mode=1):
         self.mode = mode
         self.var = variance
 
@@ -58,16 +58,24 @@ class NoiseGenerator:
 
         elif mode == 1:
             # Uniform bounded noise
-            noise = T.rand_like(x)-0.5
-            return x.detach() + 0.3*self.bound*noise.detach()
+            # noise = T.rand_like(x)-0.5
+            # return x.detach() + 0.3*self.bound*noise.detach()
             # for i,xi in enumerate(x):
             #     noise[i] = np.clip(np.add(np.random.uniform(self.bound, self.minbound, self.shape),np.asarray(xi)),
             #                        self.low,self.high)if np.random.uniform() > self.p_uniform else xi
             # return torch.tensor(noise)
+            noise = T.rand_like(x)-0.5
+            return T.tensor(x+0.4*self.bound*noise)
+
         elif mode == 2:
-            # Gaussian noise
-            x = x.detach().cpu().numpy()
+            # # Gaussian noise
+            # x = x.detach().cpu().numpy()
+            # noise = np.zeros_like(x)
+            # for i,xi in enumerate(x):
+            #     noise[i] = np.clip(np.random.normal(0, self.var), -self.bound, self.bound)
+            # return T.tensor(x+noise).detach()
+            x = x.cpu().detach().numpy()
             noise = np.zeros_like(x)
             for i,xi in enumerate(x):
-                noise[i] = np.clip(np.random.normal(0, self.var), -self.bound, self.bound)
-            return T.tensor(x+noise).detach()
+                noise[i] = np.clip(np.add(np.random.normal(0, self.var), np.asarray(xi)),-self.bound, self.bound).astype(xi.dtype)
+            return T.tensor(noise)
