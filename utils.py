@@ -15,44 +15,90 @@ class HyperParameters:
         self.tau = 0.01
         self.noise_mode = 1
 
-# class Config:
-#     def __init__(self):
-#         self.training = ConfigTraining
-#         self.Testing = ConfigTesting
+class Config:
+    def __init__(self): 
+        self.is_testing = None
+        self.edi_mode = None
+        self.load = None
+        self.load_adversaries = None
+        self.edi_load = None
+        self.render = None
+        self.zeta = None
+        self.greedy = None
+        self.decreasing_eps = None
+        self.N_games = None
+        self.lexi_mode = None
+        self.robust_actor_loss = None
+        self.log = None
+        self.noisy = None
+        self.load_alt_location = None
+        self.noise_mode=None
 
-# class ConfigTraining:
-#     def __init__(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4, lexi_mode=False):
+    def set(self, is_testing=None, edi_mode=None, load=None, load_adversaries=None, edi_load=None, render=None, zeta=None, greedy=None, decreasing_eps=None, N_games=None, lexi_mode=None, robust_actor_loss=None, log=None, noisy=None, load_alt_location=None, noise_mode=None):
+        if is_testing != None:
+            self.is_testing = is_testing
 
+        if edi_mode != None:
+            self.edi_mode = edi_mode
 
+        if load != None:
+            self.load = load
 
-# class ConfigTesting:
-#     def __init__(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4, lexi_mode=False):
+        if load_adversaries != None:
+            self.load_adversaries = load_adversaries
 
+        if edi_load != None:
+            self.edi_load = edi_load
 
+        if render != None:
+            self.render = render
 
+        if zeta != None:
+            self.zeta = zeta
 
-#     def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, alpha=0.0, greedy=False, decreasing_eps=True, N_games=None, reward_mode=4, lexi_mode=False):
-#         if edi_mode=='disabled':
-#             edi_load = False
+        if greedy != None:
+            self.greedy = greedy
+        
+        if decreasing_eps != None:
+            self.decreasing_eps = decreasing_eps
 
-#         is_testing = False
-#         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
-#             raise Exception('Invalid mode for edi_mode selected')
-#         history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode, lexi_mode)
-#         return history
-    
+        if N_games != None:
+            self.N_games = N_games
 
-#     def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, alpha=0.0, greedy=False, decreasing_eps=False, N_games=None, reward_mode=4, lexi_mode=False):
-#         if edi_mode=='disabled':
-#             edi_load = False
+        if lexi_mode != None:
+            self.lexi_mode = lexi_mode
 
-#         is_testing = True
-#         if edi_mode!='disabled' and edi_mode!='test' and edi_mode!='train':
-#             raise Exception('Invalid mode for edi_mode selected')
-#         history = self.run_episodes(is_testing, edi_mode, load, load_adversaries, edi_load, render, alpha, greedy, decreasing_eps, N_games, reward_mode, lexi_mode)
-#         return history
+        if robust_actor_loss != None:
+            self.robust_actor_loss = robust_actor_loss
 
+        if log != None:
+            self.log = log
 
+        if noisy != None:
+            self.noisy = noisy
+
+        if load_alt_location != None:
+            self.load_alt_location = load_alt_location
+
+        if noise_mode != None:
+            self.noise_mode=noise_mode
+
+class Session_parameters:
+    def __init__(self, total_steps, history, best, N_games):
+        self.total_steps = total_steps
+        self.history = history
+        self.best = best
+        self.N_games = N_games
+        self.next_episode = True
+
+class Episode_parameters:
+    def __init__(self, lexi_mode_active, score, communications, done, episode_step, episode_sequence):
+        self.lexi_mode_active = lexi_mode_active
+        self.score = score
+        self.communications = communications
+        self.done = done
+        self.episode_step = episode_step
+        self.episode_sequence = episode_sequence
 
 def obs_list_to_state_vector(observation):
     state = np.array([])

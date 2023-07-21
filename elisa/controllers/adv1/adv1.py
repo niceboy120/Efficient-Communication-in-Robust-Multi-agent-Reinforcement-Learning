@@ -1,19 +1,21 @@
-from controller import Robot, DistanceSensor, Motor, Receiver
+from controller import Robot, DistanceSensor, Motor, Receiver, Emitter
 import numpy as np
 
 import sys
-sys.path.insert(0, '..')
+sys.path.insert(0, '../../..')
 # from MPC.waypoints import WAYPOINT_CONTROLLER
-from MPC.controller import BEUN
+from MPC.controller import SIMPLE_CONTROLLER
 from MPC.car import Car
 
 
 # time in [ms] of a simulation step
 TIME_STEP = 32
+HORIZON = 4
 MAX_SPEED = 130
 
 # create the Robot instance.
 robot = Robot()
+emitter = Emitter('emitter')
 receiver = Receiver('receiver')
 receiver.enable(TIME_STEP)
 
@@ -40,10 +42,12 @@ while robot.step(TIME_STEP) != -1:
     
     if i==0:
         car = Car(x[0], x[1], x[2])
-        controller = BEUN(2)    
+        controller = SIMPLE_CONTROLLER(HORIZON)    
     
-    linear_vel, angular_vel = controller.get_control_inputs(np.array([[x[1]],[x[0]],[x[2]]]), goal)
+    linear_vel, angular_vel = controller.get_control_inputs(np.array([[x[0]],[x[1]],[x[2]]]), goal)
     car.set_robot_velocity(linear_vel, angular_vel)
+    vel = [linear_vel*np.cos(x[2]), linear_vel*np.sin(x[2])]
+    emitter.send(vel)
     
     
     rightMotor.setVelocity(car.wheel_speed[0])

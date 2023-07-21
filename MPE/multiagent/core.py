@@ -1,6 +1,6 @@
 import numpy as np
 from MPC.car import Car
-from MPC.controller import MPC, PID, BEUN
+from MPC.controller import MPC, PID, SIMPLE_CONTROLLER
 
 # physical/external base state of all entites
 class EntityState(object):
@@ -82,10 +82,10 @@ class Agent(Entity):
         # Car object
         self.car = Car(0,0)
         # MPC object
-        self.horizon = 10
+        self.horizon = 4
         self.controller = MPC(self.horizon)
         # self.controller = PID(horizon=self.horizon)
-        self.controller = BEUN(self.horizon)
+        self.controller = SIMPLE_CONTROLLER(self.horizon)
 
 # multi-agent world
 class World(object):
@@ -124,12 +124,17 @@ class World(object):
         return [agent for agent in self.agents if agent.action_callback is not None]
 
     # update state of the world
-    def step(self):
+    def step(self, obs=None):
         if self.env == 'simple_tag_elisa':
-            self.update_agent_elisa()
-        # elif self.env == 'simple_tag_mpc':
+            self.update_agent_elisa()           
 
         else:
+            if self.env=='simple_tag_webots':
+                if obs==None:
+                    print('Warning, you indicated that the observation should come from webots but did not provide one')
+                else:
+                    self.set_webots_obs(obs)
+
             # set actions for scripted agents 
             for agent in self.scripted_agents:
                 agent.action = agent.action_callback(agent, self)
@@ -274,3 +279,8 @@ class World(object):
             return 1.0
         elif x <= -1.0:
             return -1.0
+        
+    def set_webots_obs(self, obs):
+        for i, agent in enumerate(self.agents):
+            agent.state.p_vel = obs[i][0:2]
+            agent.state.p_pos = obs[i][2:4]

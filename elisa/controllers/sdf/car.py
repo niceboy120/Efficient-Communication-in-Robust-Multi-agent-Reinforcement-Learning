@@ -31,8 +31,8 @@ class Car:
                                     ])
         
         self.B = np.array([
-                [np.sin(self.x[2, 0] + np.pi/2),  0],
-                [np.cos(self.x[2, 0] + np.pi/2),  0]
+                [np.cos(self.x[2, 0]),  0],
+                [np.sin(self.x[2, 0]),  0]
             ])
 
         vel = np.array([
@@ -44,11 +44,11 @@ class Car:
 
         self.get_transformed_pts()
 		
-    def set_pos(self, x, y):
+    def set_pos(self, x, y, phi=np.pi/2):
         self.x = np.array([
                     [x],
                     [y],
-                    [np.pi/2]
+                    [phi]
                     ])
 
 
@@ -78,8 +78,8 @@ class Car:
                     ])
         
         B = np.array([
-                        [np.sin(self.x[2, 0] + np.pi/2)*dt,  0],
-                        [np.cos(self.x[2, 0] + np.pi/2)*dt,  0],
+                        [np.cos(self.x[2, 0])*dt,  0],
+                        [np.sin(self.x[2, 0])*dt,  0],
                         [0					 , dt]
                     ])
 

@@ -29,14 +29,23 @@
 # print(zeta_diff)
 
 
-import pickle
+# import pickle
 
-test = 'simple_tag'
+# test = 'simple_tag'
 
-with open('results/'+ENV+'/temp.pickle', 'wb') as f:
-    pickle.dump(4, f)
+# with open('results/'+ENV+'/temp.pickle', 'wb') as f:
+#     pickle.dump(4, f)
 
-with open('results/'+test+'/temp.pickle', 'rb') as f:
-    asdf = pickle.load(f)
+# with open('results/'+test+'/temp.pickle', 'rb') as f:
+#     asdf = pickle.load(f)
 
-print(asdf)
+# print(asdf)
+
+
+i=0
+
+while i==0:
+	print('s')
+	continue
+
+print('dsfs')

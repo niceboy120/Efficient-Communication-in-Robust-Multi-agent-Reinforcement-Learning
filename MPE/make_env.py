@@ -33,7 +33,7 @@ def make_env(scenario_name, benchmark=False):
     import MPE.multiagent.scenarios as scenarios
 
     # load scenario from script
-    if scenario_name == 'simple_tag_mpc':
+    if scenario_name == 'simple_tag_mpc' or scenario_name == 'simple_tag_webots':
         scenario = scenarios.load("simple_tag" + ".py").Scenario()
     else:    
         scenario = scenarios.load(scenario_name + ".py").Scenario()

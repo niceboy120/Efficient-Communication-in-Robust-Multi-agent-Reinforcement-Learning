@@ -26,12 +26,14 @@ class GammaNet(nn.Module):
         x = F.relu(self.fc1(T.cat([state_1, state_2], dim=1)))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-        Gam = F.relu(self.Gam(x))
+        Gam = (self.Gam(x))
 
         return Gam
 
     def save_checkpoint(self):
+        print('... saving gammanet checkpoint at '+self.chkpt_file+' ...')
         T.save(self.state_dict(), self.chkpt_file)
 
     def load_checkpoint(self):
+        print('... loading gammanet checkpoint from '+self.chkpt_file+' ...')
         self.load_state_dict(T.load(self.chkpt_file))

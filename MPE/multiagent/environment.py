@@ -43,7 +43,7 @@ class MultiAgentEnv(gym.Env):
             total_action_space = []
             # physical action space
             if self.discrete_action_space:
-                if self.env != 'simple_tag_elisa' and self.env != 'simple_tag_webots':
+                if self.env != 'simple_tag_elisa':
                     u_action_space = spaces.Discrete(world.dim_p * 2 + 1)
                 else:
                     u_action_space = spaces.Discrete(2)
@@ -81,7 +81,7 @@ class MultiAgentEnv(gym.Env):
             self.viewers = [None] * self.n
         self._reset_render()
 
-    def step(self, action_n, reward_mode=None):
+    def step(self, action_n, reward_mode=None, obs=None):
         obs_n = []
         reward_n = []
         done_n = []
@@ -91,7 +91,7 @@ class MultiAgentEnv(gym.Env):
         for i, agent in enumerate(self.agents):
             self._set_action(action_n[i], agent, self.action_space[i])
         # advance world state
-        self.world.step()
+        self.world.step(obs)
         # record observation for each agent
         for agent in self.agents:   
             obs_n.append(self._get_obs(agent))
@@ -152,7 +152,7 @@ class MultiAgentEnv(gym.Env):
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
-        if self.env != 'simple_tag_elisa' and self.env != 'simple_tag_webots':
+        if self.env != 'simple_tag_elisa' and self.env:
             agent.action.u = np.zeros(2)
             agent.action.c = np.zeros(self.world.dim_c)
             # process action

@@ -92,7 +92,7 @@ class MPC:
         return result.x[0],  result.x[1]
     
 
-class BEUN:
+class SIMPLE_CONTROLLER:
     def __init__(self, horizon):
         self.horizon = horizon
 

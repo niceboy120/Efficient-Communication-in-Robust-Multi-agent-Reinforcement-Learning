@@ -69,11 +69,9 @@ class NetUtilities():
                 return False
 
     def save(self):
-        print('... saving gammanet checkpoint ...')
         self.gammanet.save_checkpoint()
 
         
     def load(self):
-        print('... loading gammanet checkpoint ...')
         self.gammanet.load_checkpoint()
             

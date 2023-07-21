@@ -92,29 +92,34 @@ class MPC:
         return result.x[0],  result.x[1]
     
 
-class BEUN:
+class SIMPLE_CONTROLLER:
     def __init__(self, horizon):
         self.horizon = horizon
 
     def get_control_inputs(self, x, goal_x):
         body_to_goal = get_angle(x[0, 0], x[1, 0], goal_x[0], goal_x[1])
-        error_angle = (-body_to_goal) - x[2, 0]
+        error_angle = (body_to_goal) - x[2, 0]
         error_angle = (error_angle + np.pi) % (2*np.pi) - np.pi
 
         error_position = get_distance(x[0, 0], x[1, 0], goal_x[0], goal_x[1])
 
-        if abs(error_angle) < 0.1:
-            if error_position < 0.001:
-                return 0, 0
+        if error_position < 0.005:
+            return 0, 0
+        elif error_position >= 0.005 and error_position < 0.05:
+            if abs(error_angle) < 0.01:
+                return 0.2, 0
             else:
-                return 2, 0
+                return 0, np.sign(error_angle)*0.5
         else:
-            if abs(error_angle) > np.pi/2:
-                return 0, np.sign(error_angle)*3
-            elif abs(error_angle)>np.pi/4 and abs(error_angle)< np.pi/2:
-                return 1, np.sign(error_angle)*2
+            if abs(error_angle) < 0.001:
+                return 0.585, 0
+            elif abs(error_angle) >= 0.001 and abs(error_angle) < np.pi/4:
+                return 0.45, np.sign(error_angle)*2
+            elif abs(error_angle) > np.pi/4 and abs(error_angle) < np.pi/2:
+                return 0.3, np.sign(error_angle)*3
             else:
-                return 2.0, np.sign(error_angle)*1
+                return 0, np.sign(error_angle)*4            
+                
             
          
     

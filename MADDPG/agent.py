@@ -6,7 +6,7 @@ from LRRL.lexicographic import LexicographicWeights
 from LRRL.noise_generator import NoiseGenerator
 
 class Agent:
-    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, noise_mode, chkpt_dir, scenario,
+    def __init__(self, actor_dims, critic_dims, n_actions, n_agents, agent_idx, chkpt_dir, scenario,
                     lr_actor=0.01, lr_critic=0.01, fc1=64, 
                     fc2=64, gamma=0.95, tau=0.01):
         self.gamma = gamma
@@ -27,7 +27,7 @@ class Agent:
                                             name=self.agent_name+'_target_critic')
         
 
-        self.noise = NoiseGenerator(mode = noise_mode)
+        self.noise = NoiseGenerator()
         self.lexicographic_weights = LexicographicWeights(self.noise)
         self.recent_losses = self.lexicographic_weights.init_recent_losses()
         
@@ -57,7 +57,7 @@ class Agent:
 
         return actions.detach().cpu().numpy()[0]
     
-    def eval_choose_action_noisy(self, observation, noise_mode=None):
+    def eval_choose_action_noisy(self, observation, noise_mode):
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.target_actor.device)
         disturbed = self.noise.nu(state, noise_mode)
         actions = self.target_actor.forward(disturbed.to(self.target_actor.device))

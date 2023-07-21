@@ -6,7 +6,7 @@ import numpy as np
 from MADDPG.agent import Agent
 
 class MADDPG:
-    def __init__(self, actor_dims, critic_dims, n_agents, n_actions, noise_mode,
+    def __init__(self, actor_dims, critic_dims, n_agents, n_actions,
                  scenario='simple',  lr_actor=0.01, lr_critic=0.01, fc1=64, 
                  fc2=64, gamma=0.99, tau=0.01, chkpt_dir='trained_nets/regular/'):
         self.agents = []
@@ -14,7 +14,7 @@ class MADDPG:
         self.n_actions = n_actions
         for agent_idx in range(self.n_agents):
             self.agents.append(Agent(actor_dims[agent_idx], critic_dims,  
-                            n_actions, n_agents, agent_idx, noise_mode, lr_actor=lr_actor, lr_critic=lr_critic,
+                            n_actions, n_agents, agent_idx, lr_actor=lr_actor, lr_critic=lr_critic,
                             chkpt_dir=chkpt_dir, scenario=scenario))
         self.scaler = GradScaler()
         self.scenario = scenario
