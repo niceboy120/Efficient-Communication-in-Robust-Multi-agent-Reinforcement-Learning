@@ -133,13 +133,7 @@ class MADDPG:
                 else:
                     robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent, device, noise_mode)                
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
-
-                if writer is not None:
-                    writer.add_scalar("robustness loss", robust_loss, i)
-                    writer.add_scalar("policy loss", actor_loss, i)
-                    writer.add_scalar("weight 1", w[0], i)
-                    writer.add_scalar("weight 2", w[1], i)
-                
+               
                 loss = actor_loss + robust_loss*(w[1]/w[0])
                 # loss = robust_loss
 
@@ -147,15 +141,26 @@ class MADDPG:
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())
                 agent.lexicographic_weights.update_lagrange(agent.recent_losses)
 
+                if writer is not None and agent_idx==0:
+                    writer.add_scalar("robustness loss", robust_loss, i)
+                    writer.add_scalar("policy loss", actor_loss, i)
+                    writer.add_scalar("weight 1", w[0], i)
+                    writer.add_scalar("weight 2", w[1], i)
+                    writer.add_scalar("lambda", agent.lexicographic_weights.labda[0], i)
+                    writer.add_scalar("optimal", agent.lexicographic_weights.j[0], i)
+                    writer.add_scalar("last", agent.recent_losses[0][-1], i)
+                    
                 agent.actor.train()
                 agent.actor.optimizer.zero_grad()
                 loss.backward(retain_graph=True)
                 agent.actor.optimizer.step()
 
-                if writer is not None:
+                if writer is not None and agent_idx==0:
                     writer.add_scalar("total policy loss", loss, i)
 
             else:
+                if writer is not None and agent_idx==0:
+                    writer.add_scalar("policy loss", actor_loss, i)
                 agent.actor.train()
                 agent.actor.optimizer.zero_grad()
                 actor_loss.backward(retain_graph=True)

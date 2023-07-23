@@ -6,6 +6,14 @@ import numpy as np
 ENV = 'simple_tag'
 
 
+
+"""
+=========================================================================================================================
+            CONVERGENCE
+=========================================================================================================================
+"""
+
+
 # with open('results/'+ENV+'/results_convergence.pickle', 'rb') as f:
 #     data = pickle.load(f)
 
@@ -37,6 +45,13 @@ ENV = 'simple_tag'
 # plt.show()
 
 
+"""
+=========================================================================================================================
+            ZETA FOR STATE STEPS
+=========================================================================================================================
+"""
+
+
 with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
     data = pickle.load(f)
 
@@ -50,7 +65,11 @@ plt.title('Increase of $\zeta$ for states further apart')
 plt.show()
 
 
-
+"""
+=========================================================================================================================
+            PERFORMANCE COMM PLOT
+=========================================================================================================================
+"""
 
 with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
     data = pickle.load(f)
@@ -62,7 +81,7 @@ from utils import HyperParameters
 par = HyperParameters()
 
 for i in range(len(data[0])):
-    print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[i], data[i]*(1/(1-par.gamma)), data[1][i+1, 0], data[3][i+1, 0]))
+    print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[0][i], data[0][i]*(1/(1-par.gamma)), data[1][0,0]-data[1][i+1, 0], data[1][0,0]-data[3][i+1, 0]))
 
 
 fig,ax = plt.subplots()
@@ -84,14 +103,24 @@ plt.title("Number of communications and score for different $\zeta_{\mathrm{th}}
 plt.show()
 
 
+
+"""
+=========================================================================================================================
+            NOISE TEST
+=========================================================================================================================
+"""
+
 with open('results/'+ENV+'/results_noise_test.pickle', 'rb') as f:
     data = pickle.load(f)
+dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "LRRL1(T2) no noise", "LRRL2(T1) no noise", "LRRL2(T2) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 ", "LRRL1(T2) noise 1 ", "LRRL1(T2) noise 2 ", "LRRL2(T1) noise 1 ", "LRRL2(T1) noise 2 ", "LRRL2(T2) noise 1 ", "LRRL2(T2) noise 2 "]
+
+# with open('results/'+ENV+'/results_noise_test_2.pickle', 'rb') as f:
+#     data = pickle.load(f)
+# dic = ["Vanilla no noise  ", "LRRL2(T2) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL2(T2) noise 1 ", "LRRL2(T2) noise 2 "]
 
 
 mean = []
 std = []
-# dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 "]
-dic = ["Vanilla no noise  ", "LRRL1(T1) no noise", "LRRL1(T2) no noise", "LRRL2(T1) no noise", "LRRL2(T2) no noise", "Vanilla noise 1   ", "Vanilla noise 2   ", "LRRL1(T1) noise 1 ", "LRRL1(T1) noise 2 ", "LRRL1(T2) noise 1 ", "LRRL1(T2) noise 2 ", "LRRL2(T1) noise 1 ", "LRRL2(T1) noise 2 ", "LRRL2(T2) noise 1 ", "LRRL2(T2) noise 2 "]
 for i in range(len(data)):
     score = []
     for j in range(len(data[i])):

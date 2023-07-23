@@ -93,7 +93,13 @@ class Scenario(BaseScenario):
             main_reward, collisions = self.agent_reward(agent, world)
             return main_reward, collisions
 
-    def agent_reward(self, agent, world):
+    def agent_reward(self, agent=None, world=None, coords=None):
+        if coords != None: 
+            for n, agent_ in enumerate(world.agents):
+                agent_.state.p_pos = np.array([coords[n*2], coords[n*2+1]])
+            agents = self.good_agents(world)
+            agent = agents[0]
+
         # Agents are negatively rewarded if caught by adversaries
         rew = 0
         shape = True
@@ -123,7 +129,11 @@ class Scenario(BaseScenario):
 
         return rew, 0
 
-    def adversary_reward(self, agent, world, reward_mode=None):
+    def adversary_reward(self, agent=None, world=None, reward_mode=None, coords=None):
+        if coords != None: 
+            for n, agent_ in enumerate(world.agents):
+                agent_.state.p_pos = np.array([coords[n*2], coords[n*2+1]])
+
         # Adversaries are rewarded for collisions with agents
         rew = 0
         shape = True

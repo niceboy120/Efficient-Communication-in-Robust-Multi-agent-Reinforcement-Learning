@@ -14,7 +14,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation -0.5283107492504255 0.5349937488102706 0.6592946541269595 1.94642296932938
-  position -0.09983892793394554 -1.0661757276705532 3.8357752773211358
+  position -0.10132295844755054 -1.0891692151486172 3.9344149462429434
 }
 TexturedBackground {
 }
@@ -29,18 +29,6 @@ RectangleArena {
 }
 Robot {
   children [
-    Receiver {
-      name "receiver_reset"
-      channel 6
-    }
-    Emitter {
-      name "emitter_RL"
-      channel 4
-    }
-    Receiver {
-      name "receiver_RL"
-      channel 5
-    }
     Emitter {
       name "emitter1"
       channel 1
@@ -80,32 +68,4 @@ DEF AGENT Elisa3 {
   controller "agent"
   emitter_channel 9
   receiver_channel 3
-}
-Robot {
-  children [
-    Receiver {
-      name "receiver_vel_adv1"
-      channel 7
-    }
-    Receiver {
-      name "receiver_vel_adv2"
-      channel 8
-    }
-    Receiver {
-      name "receiver_vel_agent"
-      channel 9
-    }
-    Emitter {
-      name "emitter_reset"
-      channel 6
-    }
-    Receiver {
-      channel 4
-    }
-    Emitter {
-      channel 5
-    }
-  ]
-  name "RL supervisor"
-  controller "RL_supervisor"
 }

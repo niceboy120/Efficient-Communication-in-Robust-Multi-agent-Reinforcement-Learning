@@ -34,7 +34,7 @@ n_episode = 0
 
 adv1_vel = [0,0]
 adv2_vel = [0,0] 
-agent_vel [0,0]
+agent_vel = [0,0]
 
 
 

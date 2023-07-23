@@ -1,9 +1,6 @@
 import numpy as np
 import torch as T
 from utils import obs_list_to_state_vector
-from EDI.network import GammaNet
-
-
 
 ## TO DO HERE: do the Q values sheit, check the structure of sequence to make sure the slicing is done correcly in len and gamma
 

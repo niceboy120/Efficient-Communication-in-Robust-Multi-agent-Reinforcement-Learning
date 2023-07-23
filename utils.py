@@ -3,17 +3,16 @@ import numpy as np
 class HyperParameters:
     def __init__(self):
         self.N_games = 50000
-        self.N_games_edi = 1001
-        self.N_games_test = 1001
+        self.N_games_edi = 501
+        self.N_games_test = 101
         self.lexi_activate_episode_threshold = 15000
         self.print_interval = 250
-        self.autosave_interval = 500
+        self.autosave_interval = 50
         self.max_steps = 60
         self.eps = 0.9
         self.gamma_batch_size = 32
         self.gamma = 0.99
         self.tau = 0.01
-        self.noise_mode = 1
 
 class Config:
     def __init__(self): 

@@ -357,7 +357,7 @@ class Train:
             msg2 = "lexicographic policy"
 
         if self.config.noisy:
-            msg3 = " with noise (mode = "+str(self.par.noise_mode)+")"
+            msg3 = " with noise (mode = "+str(self.config.noise_mode)+")"
         else:
             msg3 = " without noise"
 
