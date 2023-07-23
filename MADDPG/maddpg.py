@@ -134,7 +134,7 @@ class MADDPG:
                     robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent, device, noise_mode)                
                 # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
                
-                loss = actor_loss + robust_loss*(w[1]/w[0])
+                loss = actor_loss*(w[0]/sum(w)) + robust_loss*(w[1]/sum(w))
                 # loss = robust_loss
 
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())
@@ -149,7 +149,7 @@ class MADDPG:
                     writer.add_scalar("lambda", agent.lexicographic_weights.labda[0], i)
                     writer.add_scalar("optimal", agent.lexicographic_weights.j[0], i)
                     writer.add_scalar("last", agent.recent_losses[0][-1], i)
-                    
+
                 agent.actor.train()
                 agent.actor.optimizer.zero_grad()
                 loss.backward(retain_graph=True)

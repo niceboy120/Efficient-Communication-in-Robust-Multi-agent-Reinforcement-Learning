@@ -8,7 +8,7 @@ import numpy as np
 
 
 class NoiseGenerator:
-    def __init__(self, variance=0.3, bound=None, mode=1):
+    def __init__(self, variance=0.2, bound=None, mode=1):
         self.mode = mode
         self.var = variance
 

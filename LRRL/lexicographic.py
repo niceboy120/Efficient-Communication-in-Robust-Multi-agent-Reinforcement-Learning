@@ -9,9 +9,9 @@ class LexicographicWeights():
         self.labda = [0.0 for _ in range(self.n_labdas)]
         self.j = [0.0 for _ in range(self.n_labdas)]
 
-        self.beta = list(reversed(range(1, self.n_objectives+1))) 
+        self.beta = list(range(1, self.n_objectives+1))
         self.eta = [1e-3 * eta for eta in list(reversed(range(1, self.n_objectives+1)))]
-        self.vareps = 0.01
+        self.vareps = 0.5
 
         self.coeff = 0.01
         self.loss_bound = 0.5 # duimzuigerij dit wel...
@@ -26,10 +26,10 @@ class LexicographicWeights():
     def update_lagrange(self, recent_losses):
         # Save relevant loss information for updating Lagrange parameters
         for i in range(self.n_labdas):
-            self.j[i] = -T.tensor(recent_losses[i]).mean()
+            self.j[i] = T.tensor(recent_losses[i]).mean()
         # Update Lagrange parameters
         for i in range(self.n_labdas):
-            self.labda[i] += self.eta[i] * (self.j[i] - self.vareps*self.j[i] - recent_losses[i][-1])
+            self.labda[i] += self.eta[i] * (self.j[i] - self.vareps - recent_losses[i][-1])
             self.labda[i] = max(self.labda[i], 0.0)
 
     def compute_weights(self):

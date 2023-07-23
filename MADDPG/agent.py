@@ -36,7 +36,7 @@ class Agent:
     def choose_action(self, observation, greedy, eps, ratio, decreasing_eps):
         if greedy:
             if decreasing_eps:
-                eps = (1-ratio)*eps# + (1-eps)
+                eps = max((1-ratio)*eps, 0.3*eps)
 
         state = T.tensor(np.array([observation]), dtype=T.float32).to(self.actor.device)
         actions = self.actor.forward(state)
