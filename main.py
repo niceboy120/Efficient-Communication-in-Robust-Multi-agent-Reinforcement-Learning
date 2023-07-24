@@ -35,11 +35,11 @@ if __name__ == '__main__':
             # train_agents_LRRL4.testing()
 
             # Training maddpg agents
-            history_regular = train_agents_regular.training(load=True, greedy=True, decreasing_eps=True, lexi_mode=False, log=True, load_alt_location='simple_tag')
+            # history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True)#, load_alt_location='simple_tag')
             history_LRRL, _ = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=False, noise_mode=1)#, load_alt_location='simple_tag')
             history_LRRL2, _ = train_agents_LRRL2.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=False, noise_mode=2)#, load_alt_location='simple_tag')
             history_LRRL3, _ = train_agents_LRRL3.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True, noise_mode=1)#, load_alt_location='simple_tag')
-            history_LRRL4, _ = train_agents_LRRL4.training(load=True, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True, noise_mode=2, load_alt_location='simple_tag')
+            history_LRRL4, _ = train_agents_LRRL4.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True, noise_mode=2)#, load_alt_location='simple_tag')
 
 
             # with open('results/'+ENV+'/results_convergence.pickle', 'wb+') as f:

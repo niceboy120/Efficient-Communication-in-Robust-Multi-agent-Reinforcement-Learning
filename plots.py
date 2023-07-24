@@ -52,17 +52,17 @@ ENV = 'simple_tag'
 """
 
 
-with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
-    data = pickle.load(f)
+# with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
+#     data = pickle.load(f)
 
-for i in range(1, len(data)):
-    data[i] = np.mean(data[i])
+# for i in range(1, len(data)):
+#     data[i] = np.mean(data[i])
 
-plt.plot(data[1:])
-plt.xlabel('Steps between states')
-plt.ylabel('$\zeta$ from neural network')
-plt.title('Increase of $\zeta$ for states further apart')
-plt.show()
+# plt.plot(data[1:])
+# plt.xlabel('Steps between states')
+# plt.ylabel('$\zeta$ from neural network')
+# plt.title('Increase of $\zeta$ for states further apart')
+# plt.show()
 
 
 """
@@ -71,36 +71,36 @@ plt.show()
 =========================================================================================================================
 """
 
-with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
-    data = pickle.load(f)
+# with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
+#     data = pickle.load(f)
 
-# [zeta, mean_regular, std_regular, worst_regular, mean_LRRL, std_LRRL, worst_LRRL]
-# For all but zeta: 1st column is score adveraries, 2nd is score agents, 3rd is communications. and 1st row is without EDI
+# # [zeta, mean_regular, std_regular, worst_regular, mean_LRRL, std_LRRL, worst_LRRL]
+# # For all but zeta: 1st column is score adveraries, 2nd is score agents, 3rd is communications. and 1st row is without EDI
 
-from utils import HyperParameters
-par = HyperParameters()
+# from utils import HyperParameters
+# par = HyperParameters()
 
-for i in range(len(data[0])):
-    print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[0][i], data[0][i]*(1/(1-par.gamma)), data[1][0,0]-data[1][i+1, 0], data[1][0,0]-data[3][i+1, 0]))
+# for i in range(len(data[0])):
+#     print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[0][i], data[0][i]*(1/(1-par.gamma)), data[1][0,0]-data[1][i+1, 0], data[1][0,0]-data[3][i+1, 0]))
 
 
-fig,ax = plt.subplots()
-ax.fill_between(data[0], data[1][1:,0]+data[2][1:,0], data[1][1:,0]-data[2][1:,0], color="red", alpha=0.3)
-ax.fill_between(data[0], data[4][1:,0]+data[5][1:,0], data[4][1:,0]-data[5][1:,0], color="tomato", alpha=0.3)
-ax.plot(data[0], data[1][1:,0], color="red", marker="o", label='Vanilla')
-ax.plot(data[0], data[4][1:,0], color="tomato", marker=".", linestyle="--", label='LRRL')
-ax.set_xlabel("$\zeta_{\mathrm{th}}$", fontsize=14)
-ax.set_ylabel("score adversaries", color="red", fontsize=14)
-plt.legend()
+# fig,ax = plt.subplots()
+# ax.fill_between(data[0], data[1][1:,0]+data[2][1:,0], data[1][1:,0]-data[2][1:,0], color="red", alpha=0.3)
+# ax.fill_between(data[0], data[4][1:,0]+data[5][1:,0], data[4][1:,0]-data[5][1:,0], color="tomato", alpha=0.3)
+# ax.plot(data[0], data[1][1:,0], color="red", marker="o", label='Vanilla')
+# ax.plot(data[0], data[4][1:,0], color="tomato", marker=".", linestyle="--", label='LRRL')
+# ax.set_xlabel("$\zeta_{\mathrm{th}}$", fontsize=14)
+# ax.set_ylabel("score adversaries", color="red", fontsize=14)
+# plt.legend()
 
-ax2=ax.twinx()
-ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,2], color="blue", alpha=0.3)
-ax2.fill_between(data[0], data[4][1:,2]+data[5][1:,2], data[4][1:,2]-data[5][1:,2], color="cornflowerblue", alpha=0.3)
-ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
-ax2.plot(data[0], data[4][1:,2], color="cornflowerblue", marker=".", linestyle="--")
-ax2.set_ylabel("communications", color="blue", fontsize=14)
-plt.title("Number of communications and score for different $\zeta_{\mathrm{th}}$ values")
-plt.show()
+# ax2=ax.twinx()
+# ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,2], color="blue", alpha=0.3)
+# ax2.fill_between(data[0], data[4][1:,2]+data[5][1:,2], data[4][1:,2]-data[5][1:,2], color="cornflowerblue", alpha=0.3)
+# ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
+# ax2.plot(data[0], data[4][1:,2], color="cornflowerblue", marker=".", linestyle="--")
+# ax2.set_ylabel("communications", color="blue", fontsize=14)
+# plt.title("Number of communications and score for different $\zeta_{\mathrm{th}}$ values")
+# plt.show()
 
 
 
