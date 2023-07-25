@@ -72,9 +72,9 @@ if __name__ == '__main__':
             #     pickle.dump([test_regular, test_LRRL4, test_regular_noise_a, test_regular_noise_b, test_LRRL_noise4_a, test_LRRL_noise4_b], f)
 
             # Training gammanet
-            # train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=False)
-            # train_agents_LRRL3.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=True)
-            # train_agents_LRRL4.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=True)
+            train_agents_regular.testing(edi_mode='train', edi_load=True, N_games = 500, render=False, lexi_mode=False)
+            train_agents_LRRL3.testing(edi_mode='train', edi_load=True, N_games = 500, render=False, lexi_mode=True)
+            train_agents_LRRL4.testing(edi_mode='train', edi_load=True, N_games = 500, render=False, lexi_mode=True)
 
             # # Dummytesting gammanet
             # for i in range(5):
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
 
             # Testing EDI for different zetas
-            zeta = [1, 1.5, 2, 2.5, 3, 3.1, 3.2, 3.3, 3.4, 3.5, 4]
+            zeta = [0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1, 1.5, 2, 2.5, 3, 3.1, 3.2, 3.3, 3.4, 3.5, 4]
             for z in zeta:
                 history, _ = train_agents_regular.testing(edi_mode='test', render=False, zeta=z, lexi_mode=False)
                 mean_regular = np.vstack((mean_regular, np.mean(history, axis=0)))
