@@ -52,17 +52,25 @@ ENV = 'simple_tag'
 """
 
 
-# with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
-#     data = pickle.load(f)
+with open('results/'+ENV+'/results_zeta_diff.pickle', 'rb') as f:
+    data = pickle.load(f)
 
-# for i in range(1, len(data)):
-#     data[i] = np.mean(data[i])
+data_reg = []
+data_LRRL = []
+for i in range(1, len(data[0])):
+    data_reg.append(np.mean(data[0][i]))
+    data_LRRL.append(np.mean(data[1][i]))
 
-# plt.plot(data[1:])
-# plt.xlabel('Steps between states')
-# plt.ylabel('$\zeta$ from neural network')
-# plt.title('Increase of $\zeta$ for states further apart')
-# plt.show()
+plt.plot(data_reg, label="Vanilla")
+plt.plot(data_LRRL, label="LRRL")
+plt.xlabel('Steps between states')
+plt.ylabel('$\zeta$ from neural network')
+plt.title('Increase of $\zeta$ for states further apart')
+plt.legend()
+ax = plt.axes()
+ax.set_facecolor("lavender")
+plt.grid()
+plt.show()
 
 
 """
@@ -71,36 +79,54 @@ ENV = 'simple_tag'
 =========================================================================================================================
 """
 
-# with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
-#     data = pickle.load(f)
+with open('results/'+ENV+'/results_edi.pickle', 'rb') as f:
+    data = pickle.load(f)
 
-# # [zeta, mean_regular, std_regular, worst_regular, mean_LRRL, std_LRRL, worst_LRRL]
-# # For all but zeta: 1st column is score adveraries, 2nd is score agents, 3rd is communications. and 1st row is without EDI
+# [zeta, mean_regular, std_regular, worst_regular, mean_LRRL, std_LRRL, worst_LRRL]
+# For all but zeta: 1st column is score adveraries, 2nd is score agents, 3rd is communications. and 1st row is without EDI
 
-# from utils import HyperParameters
-# par = HyperParameters()
+from utils import HyperParameters
+par = HyperParameters()
 
-# for i in range(len(data[0])):
-#     print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[0][i], data[0][i]*(1/(1-par.gamma)), data[1][0,0]-data[1][i+1, 0], data[1][0,0]-data[3][i+1, 0]))
+print(len(data))
+
+for i in range(len(data[0])):
+    print("zeta th: %.3f, limit: %.1f, avg: %.1f, worst: %.1f" % (data[0][i], data[0][i]*(1/(1-par.gamma)), data[1][0,0]-data[1][i+1, 0], data[1][0,0]-data[3][i+1, 0]))
 
 
-# fig,ax = plt.subplots()
-# ax.fill_between(data[0], data[1][1:,0]+data[2][1:,0], data[1][1:,0]-data[2][1:,0], color="red", alpha=0.3)
-# ax.fill_between(data[0], data[4][1:,0]+data[5][1:,0], data[4][1:,0]-data[5][1:,0], color="tomato", alpha=0.3)
-# ax.plot(data[0], data[1][1:,0], color="red", marker="o", label='Vanilla')
-# ax.plot(data[0], data[4][1:,0], color="tomato", marker=".", linestyle="--", label='LRRL')
-# ax.set_xlabel("$\zeta_{\mathrm{th}}$", fontsize=14)
-# ax.set_ylabel("score adversaries", color="red", fontsize=14)
-# plt.legend()
+fig,ax = plt.subplots()
+ax.fill_between(data[0], data[1][1:,0]+data[2][1:,0], data[1][1:,0]-data[2][1:,0], color="red", alpha=0.3)
+ax.fill_between(data[0], data[4][1:,0]+data[5][1:,0], data[4][1:,0]-data[5][1:,0], color="tomato", alpha=0.3)
+ax.fill_between(data[0], data[7][1:,0]+data[8][1:,0], data[7][1:,0]-data[8][1:,0], color="ligthsalmon", alpha=0.3)
+ax.plot(data[0], data[1][1:,0], color="red", marker="o", label='Vanilla')
+ax.plot(data[0], data[4][1:,0], color="tomato", marker=".", linestyle="--", label='LRRL3')
+ax.plot(data[0], data[7][1:,0], color="lightsalmon", marker=".", linestyle="-.", label='LRRL4')
+ax.set_xlabel("$\zeta_{\mathrm{th}}$", fontsize=14)
+ax.set_ylabel("Return adversaries", color="red", fontsize=14)
+plt.legend()
 
-# ax2=ax.twinx()
-# ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,2], color="blue", alpha=0.3)
-# ax2.fill_between(data[0], data[4][1:,2]+data[5][1:,2], data[4][1:,2]-data[5][1:,2], color="cornflowerblue", alpha=0.3)
-# ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
-# ax2.plot(data[0], data[4][1:,2], color="cornflowerblue", marker=".", linestyle="--")
-# ax2.set_ylabel("communications", color="blue", fontsize=14)
-# plt.title("Number of communications and score for different $\zeta_{\mathrm{th}}$ values")
-# plt.show()
+ax2=ax.twinx()
+ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,2], color="blue", alpha=0.3)
+ax2.fill_between(data[0], data[4][1:,2]+data[5][1:,2], data[4][1:,2]-data[5][1:,2], color="cornflowerblue", alpha=0.3)
+ax2.fill_between(data[0], data[7][1:,2]+data[8][1:,2], data[7][1:,2]-data[8][1:,2], color="lightblue", alpha=0.3)
+ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
+ax2.plot(data[0], data[4][1:,2], color="cornflowerblue", marker=".", linestyle="--")
+ax2.plot(data[0], data[7][1:,2], color="lightblue", marker=".", linestyle="--")
+ax2.set_ylabel("communications", color="blue", fontsize=14)
+ax2.set_facecolor("whitesmoke")
+plt.title("Number of communications and return for different $\zeta_{\mathrm{th}}$ values")
+plt.show()
+
+
+plt.plot(data[1][1:,2], data[1][1:,0], color="red", label="Vanilla")
+plt.plot(data[4][1:,2], data[4][1:,2], color="blue", label="LRRL")
+plt.xlabel("Number of communications")
+plt.ylabel("Return of adversaries")
+plt.title("Return versus communications")
+ax = plt.axes()
+ax.set_facecolor("lavender")
+plt.legend()
+plt.show()
 
 
 
@@ -128,4 +154,9 @@ for i in range(len(data)):
     mean.append(np.mean(score))
     std.append(np.std(score))
     print(dic[i], ", mean: %.1f, std: %.1f" % (mean[i], std[i]))
+
+
+print("$%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$" % (mean[0], std[0], mean[1], std[1], mean[2], std[2], mean[3], std[3], mean[4], std[4]))
+print("$%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$" % (mean[5], std[5], mean[7], std[7], mean[9], std[9], mean[11], std[11], mean[13], std[13]))
+print("$%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$ & $%.1f \pm %.1f$" % (mean[6], std[6], mean[8], std[8], mean[10], std[10], mean[12], std[12], mean[14], std[14]))
 

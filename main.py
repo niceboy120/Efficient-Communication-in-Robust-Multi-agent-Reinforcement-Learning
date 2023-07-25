@@ -98,20 +98,30 @@ if __name__ == '__main__':
             #     print(train_agents_regular.gammanet.communication(sequence[38][1], sequence[52][1], 5, return_gamma=True, load_net=True))
             #     print("")
 
-            # zeta_diff = [[]]
-            # for i in range(1000):
-            #     _, sequence = train_agents_regular.testing(render=False, N_games=1)
-            #     start_state = random.randint(0, 20)
-            #     agent_idx = random.randint(0,1)
-            #     for j in range(start_state+1, len(sequence)):
-            #         comm, zeta = train_agents_regular.gammanet.communication(sequence[start_state][agent_idx], sequence[j][agent_idx], 0, return_gamma=True, load_net=True)
-            #         diff = j-start_state
-            #         if diff >= len(zeta_diff):
-            #             zeta_diff.append([])
-            #         zeta_diff[diff].append(zeta)
+            zeta_diff = [[]]
+            zeta_diff_LRRL = [[]]
+            zeta_diff_LRRL4 = [[]]
+            for i in range(1000):
+                _, sequence = train_agents_regular.testing(render=False, N_games=1)
+                _, sequence_LRRL = train_agents_LRRL3.testing(render=False, N_games=1)
+                _, sequence_LRRL4 = train_agents_LRRL4.testing(render=False, N_games=1)
+                start_state = random.randint(0, 20)
+                agent_idx = random.randint(0,1)
+                for j in range(start_state+1, len(sequence)):
+                    comm, zeta = train_agents_regular.gammanet.communication(sequence[start_state][agent_idx], sequence[j][agent_idx], 0, return_gamma=True, load_net=True)
+                    comm_LRRL, zeta_LRRL = train_agents_LRRL3.gammanet.communication(sequence_LRRL[start_state][agent_idx], sequence[j][agent_idx], 0, return_gamma=True, load_net=True)
+                    comm_LRRL, zeta_LRRL4 = train_agents_LRRL4.gammanet.communication(sequence_LRRL[start_state][agent_idx], sequence[j][agent_idx], 0, return_gamma=True, load_net=True)
+                    diff = j-start_state
+                    if diff >= len(zeta_diff):
+                        zeta_diff.append([])
+                        zeta_diff_LRRL.append([])
+                        zeta_diff_LRRL4.append([])
+                    zeta_diff[diff].append(zeta)
+                    zeta_diff_LRRL[diff].append(zeta_LRRL)
+                    zeta_diff_LRRL4[diff].append(zeta_LRRL4)
             
-            # with open('results/'+ENV+'/results_zeta_diff.pickle', 'wb+') as f:
-            #     pickle.dump(zeta_diff, f)            
+            with open('results/'+ENV+'/results_zeta_diff.pickle', 'wb+') as f:
+                pickle.dump([zeta_diff, zeta_diff_LRRL, zeta_diff_LRRL4], f)         
 
             # Testing with EDI disabled
             history, _ = train_agents_regular.testing(edi_mode='disabled', render=False, lexi_mode=False)
@@ -144,9 +154,9 @@ if __name__ == '__main__':
                 worst_LRRL = np.vstack((worst_LRRL, np.min(history, axis=0)))
                 
                 history, _ = train_agents_LRRL4.testing(edi_mode='test', render=False, zeta=z, lexi_mode=True)
-                mean_LRRL4 = np.mean(history, axis=0)
-                std_LRRL4 = np.std(history, axis=0)
-                worst_LRRL4 = np.min(history, axis=0)
+                mean_LRRL4 = np.vstack((mean_LRRL4, np.mean(history, axis=0)))
+                std_LRRL4 = np.vstack((std_LRRL4, np.std(history, axis=0)))
+                worst_LRRL4 = np.vstack((worst_LRRL4, np.min(history, axis=0)))
 
 
             # Dumping output
