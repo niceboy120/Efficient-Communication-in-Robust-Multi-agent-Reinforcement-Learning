@@ -299,7 +299,7 @@ class Train:
             self.maddpg_agents.load_checkpoint(load_mask, load_alt_location)
 
         if edi_load:
-            self.gammanet.load()
+            self.gammanet.load(load_alt_location)
 
 
     def communication_protocol(self, obs, last_comm, communications, zeta): # ADAPT WHEN MOVING TO WEBOTS!!        

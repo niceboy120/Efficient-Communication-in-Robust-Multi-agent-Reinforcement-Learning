@@ -72,6 +72,6 @@ class NetUtilities():
         self.gammanet.save_checkpoint()
 
         
-    def load(self):
-        self.gammanet.load_checkpoint()
+    def load(self, alternative_location=None):
+        self.gammanet.load_checkpoint(alternative_location)
             

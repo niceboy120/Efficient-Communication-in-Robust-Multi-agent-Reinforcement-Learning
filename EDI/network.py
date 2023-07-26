@@ -5,12 +5,18 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 class GammaNet(nn.Module):
-    def __init__(self, beta, input_dims, fc1_dims, fc2_dims, fc3_dims, name, chkpt_dir):
+    def __init__(self, beta, input_dims, fc1_dims, fc2_dims, fc3_dims, name, chkpt_dir, scenario):
 
 
         super(GammaNet, self).__init__()
         
-        self.chkpt_file = os.path.join(chkpt_dir, name)
+        if scenario=='simple_tag_webots':
+            chkpt_dir = '../../../'+chkpt_dir
+
+        self.chkpt_dir = chkpt_dir
+        self.scenario = scenario
+        self.name = name
+        self.chkpt_file = os.path.join(chkpt_dir+scenario, name)
 
         self.fc1 = nn.Linear(input_dims*2, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
@@ -34,6 +40,12 @@ class GammaNet(nn.Module):
         print('... saving gammanet checkpoint at '+self.chkpt_file+' ...')
         T.save(self.state_dict(), self.chkpt_file)
 
-    def load_checkpoint(self):
-        print('... loading gammanet checkpoint from '+self.chkpt_file+' ...')
-        self.load_state_dict(T.load(self.chkpt_file))
+    def load_checkpoint(self, alternative_location=None):
+        if alternative_location == None:
+            
+            self.load_state_dict(T.load(self.chkpt_file))
+        else:
+            chkpt_file = os.path.join(self.chkpt_dir+alternative_location, self.name)
+            print('... loading gammanet checkpoint from '+chkpt_file+' ...')
+            self.load_state_dict(T.load(chkpt_file))
+
