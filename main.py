@@ -22,10 +22,10 @@ if __name__ == '__main__':
             # train_agents_LRRL3 = Train(ENV, chkpt_dir='/trained_nets/LRRL3/')
             train_agents_LRRL4 = Train(ENV, chkpt_dir='/trained_nets/LRRL4/')
                 
-            history_regular, _ =  train_agents_regular.testing(render=False, noisy=False, load_alt_location='simple_tag')
-            history_LRRL, _ = train_agents_LRRL4.testing(render=False, noisy=False, load_alt_location='simple_tag') 
-            with open('results/'+ENV+'/results_policy_previous_env.pickle', 'wb') as f:
-                pickle.dump([history_regular, history_LRRL], f)
+            # history_regular, _ =  train_agents_regular.testing(render=False, noisy=False, load_alt_location='simple_tag')
+            # history_LRRL, _ = train_agents_LRRL4.testing(render=False, noisy=False, load_alt_location='simple_tag') 
+            # with open('results/'+ENV+'/results_policy_previous_env.pickle', 'wb') as f:
+            #     pickle.dump([history_regular, history_LRRL], f)
 
 
             # train_agents_regular.testing()
@@ -35,11 +35,11 @@ if __name__ == '__main__':
             # train_agents_LRRL4.testing()
 
             # Training maddpg agents
-            history_regular = train_agents_regular.training(N_games = 1000, load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True, load_alt_location='simple_tag')
+            # history_regular = train_agents_regular.training(N_games = 1000, load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True, load_alt_location='simple_tag')
             # history_LRRL, _ = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=False, noise_mode=1)#, load_alt_location='simple_tag')
             # history_LRRL2, _ = train_agents_LRRL2.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=False, noise_mode=2)#, load_alt_location='simple_tag')
             # history_LRRL3, _ = train_agents_LRRL3.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True, noise_mode=1)#, load_alt_location='simple_tag')
-            history_LRRL4, _ = train_agents_LRRL4.training(N_games = 1000, load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True, noise_mode=2, load_alt_location='simple_tag')
+            # history_LRRL4, _ = train_agents_LRRL4.training(N_games = 1000, load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=True, noise_mode=2, load_alt_location='simple_tag')
 
 
             # with open('results/'+ENV+'/results_convergence.pickle', 'wb+') as f:
@@ -47,34 +47,34 @@ if __name__ == '__main__':
             #     pickle.dump([history_regular, history_LRRL], f)
  
             # # # Testing policies without noise
-            test_regular, _ = train_agents_regular.testing(render=False, noisy=False)
+            # test_regular, _ = train_agents_regular.testing(render=False, noisy=False)
             # test_LRRL, _ = train_agents_LRRL.testing(render=False, lexi_mode=True, noisy=False)
             # test_LRRL2, _ = train_agents_LRRL2.testing(render=False, lexi_mode=True, noisy=False)
             # test_LRRL3, _ = train_agents_LRRL3.testing(render=False, lexi_mode=True, noisy=False)
-            test_LRRL4, _ = train_agents_LRRL4.testing(render=False, lexi_mode=True, noisy=False)
+            # test_LRRL4, _ = train_agents_LRRL4.testing(render=False, lexi_mode=True, noisy=False)
 
             # # # Testing the robustness
-            test_regular_noise_a, _ = train_agents_regular.testing(render=False, noisy=True, noise_mode=1)
-            test_regular_noise_b, _ = train_agents_regular.testing(render=False, noisy=True, noise_mode=2)
+            # test_regular_noise_a, _ = train_agents_regular.testing(render=False, noisy=True, noise_mode=1)
+            # test_regular_noise_b, _ = train_agents_regular.testing(render=False, noisy=True, noise_mode=2)
             # test_LRRL_noise_a, _ = train_agents_LRRL.testing(render=False, lexi_mode=True, noisy=True, noise_mode=1)
             # test_LRRL_noise_b, _ = train_agents_LRRL.testing(render=False, lexi_mode=True, noisy=True, noise_mode=2)
             # test_LRRL_noise2_a, _ = train_agents_LRRL2.testing(render=False, lexi_mode=True, noisy=True, noise_mode=1)
             # test_LRRL_noise2_b, _ = train_agents_LRRL2.testing(render=False, lexi_mode=True, noisy=True, noise_mode=2)
             # test_LRRL_noise3_a, _ = train_agents_LRRL3.testing(render=False, lexi_mode=True, noisy=True, noise_mode=1)
             # test_LRRL_noise3_b, _ = train_agents_LRRL3.testing(render=False, lexi_mode=True, noisy=True, noise_mode=2)
-            test_LRRL_noise4_a, _ = train_agents_LRRL4.testing(render=False, lexi_mode=True, noisy=True, noise_mode=1)
-            test_LRRL_noise4_b, _ = train_agents_LRRL4.testing(render=False, lexi_mode=True, noisy=True, noise_mode=2)
+            # test_LRRL_noise4_a, _ = train_agents_LRRL4.testing(render=False, lexi_mode=True, noisy=True, noise_mode=1)
+            # test_LRRL_noise4_b, _ = train_agents_LRRL4.testing(render=False, lexi_mode=True, noisy=True, noise_mode=2)
 
             # with open('results/'+ENV+'/results_noise_test.pickle', 'wb+') as f:
             #     pickle.dump([test_regular, test_LRRL, test_LRRL2, test_LRRL3, test_LRRL4, test_regular_noise_a, test_regular_noise_b, test_LRRL_noise_a, test_LRRL_noise_b, test_LRRL_noise2_a, test_LRRL_noise2_b, test_LRRL_noise3_a, test_LRRL_noise3_b, test_LRRL_noise4_a, test_LRRL_noise4_b], f)
 
-            with open('results/'+ENV+'/results_noise_test_2.pickle', 'wb') as f:
-                pickle.dump([test_regular, test_LRRL4, test_regular_noise_a, test_regular_noise_b, test_LRRL_noise4_a, test_LRRL_noise4_b], f)
+            # with open('results/'+ENV+'/results_noise_test_2.pickle', 'wb') as f:
+            #     pickle.dump([test_regular, test_LRRL4, test_regular_noise_a, test_regular_noise_b, test_LRRL_noise4_a, test_LRRL_noise4_b], f)
 
             # Training gammanet
-            train_agents_regular.testing(N_games = 100, edi_mode='train', edi_load=True, N_games = 500, render=False, lexi_mode=False)
+            train_agents_regular.testing(N_games = 100, edi_mode='train', edi_load=True, render=False, lexi_mode=False, load_alt_location='simple_tag')
             # train_agents_LRRL3.testing(edi_mode='train', edi_load=True, N_games = 500, render=False, lexi_mode=True)
-            train_agents_LRRL4.testing(N_games = 100, edi_mode='train', edi_load=True, N_games = 500, render=False, lexi_mode=True)
+            train_agents_LRRL4.testing(N_games = 100, edi_mode='train', edi_load=True, render=False, lexi_mode=True, load_alt_location='simple_tag')
 
             # # Dummytesting gammanet
             # for i in range(5):
@@ -120,8 +120,8 @@ if __name__ == '__main__':
             #         zeta_diff_LRRL[diff].append(zeta_LRRL)
             #         zeta_diff_LRRL4[diff].append(zeta_LRRL4)
             
-            with open('results/'+ENV+'/results_zeta_diff.pickle', 'wb+') as f:
-                pickle.dump([zeta_diff, zeta_diff_LRRL, zeta_diff_LRRL4], f)         
+            # with open('results/'+ENV+'/results_zeta_diff.pickle', 'wb+') as f:
+            #     pickle.dump([zeta_diff, zeta_diff_LRRL, zeta_diff_LRRL4], f)         
 
             # Testing with EDI disabled
             history, _ = train_agents_regular.testing(edi_mode='disabled', render=False, lexi_mode=False)

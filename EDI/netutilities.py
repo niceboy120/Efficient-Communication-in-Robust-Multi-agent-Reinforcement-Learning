@@ -12,7 +12,7 @@ class NetUtilities():
     def __init__(self, agents, input_dims, scenario, batch_size = 32, chkpt_dir='/trained_nets/regular'):
         self.batch_size = batch_size
         self.dataset = DataSet(agents)
-        self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet', chkpt_dir='EDI'+chkpt_dir+scenario)
+        self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet', chkpt_dir='EDI'+chkpt_dir, scenario=scenario)
 
     def get_gamma_from_net(self, x1, x2): # Getting Gamma from the network given two states
         device = self.gammanet.device
