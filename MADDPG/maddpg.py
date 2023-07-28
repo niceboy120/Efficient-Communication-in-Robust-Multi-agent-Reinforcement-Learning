@@ -1,7 +1,6 @@
 import torch as T
 # T.autograd.set_detect_anomaly(True)
 import torch.nn.functional as F
-from torch.cuda.amp import autocast, GradScaler
 import numpy as np
 from MADDPG.agent import Agent
 
@@ -16,7 +15,6 @@ class MADDPG:
             self.agents.append(Agent(actor_dims[agent_idx], critic_dims,  
                             n_actions, n_agents, agent_idx, lr_actor=lr_actor, lr_critic=lr_critic,
                             chkpt_dir=chkpt_dir, scenario=scenario))
-        self.scaler = GradScaler()
         self.scenario = scenario
         self.chkpt_dir = chkpt_dir
         
@@ -109,21 +107,15 @@ class MADDPG:
             target = rewards[:,agent_idx] + critic_value_*agent.gamma
             target = target.detach()
 
-            # with autocast():
             agent.critic.train()
             critic_loss = F.mse_loss(target, critic_value)
             agent.critic.optimizer.zero_grad()
             critic_loss.backward()
             agent.critic.optimizer.step()
 
-            # self.scaler.scale(critic_loss).backward(retain_graph=True)
-            # self.scaler.unscale_(agent.critic.optimizer)
-            # self.scaler.step(agent.critic.optimizer)
-            # self.scaler.update()
-
             agent.critic.eval()
             actor_loss = agent.critic.forward(states, mu).flatten()
-            actor_loss = -T.mean(actor_loss) # Mean in case of stochastic policy??? or because we sample multiple states at a time maybe
+            actor_loss = -T.mean(actor_loss) 
 
             if lexi_mode:
                 w = agent.lexicographic_weights.compute_weights()
@@ -132,10 +124,8 @@ class MADDPG:
                     robust_loss = agent.lexicographic_weights.robust_loss_actor(T.tensor(np.array(actor_states[agent_idx]), dtype=T.float32).to(device), all_agents_new_mu_actions[agent_idx], agent, device, noise_mode)
                 else:
                     robust_loss = agent.lexicographic_weights.robust_loss_critic(states, mu, agent, device, noise_mode)                
-                # robust_loss = T.tensor(robust_loss, dtype=T.float32).to(device) 
                
                 loss = actor_loss*(w[0]/sum(w)) + robust_loss*(w[1]/sum(w))
-                # loss = robust_loss
 
                 agent.recent_losses[0].append(-actor_loss.detach().cpu().numpy())
                 agent.recent_losses[1].append(robust_loss.detach().cpu().numpy())
@@ -165,10 +155,5 @@ class MADDPG:
                 agent.actor.optimizer.zero_grad()
                 actor_loss.backward(retain_graph=True)
                 agent.actor.optimizer.step()
-
-            # self.scaler.scale(loss).backward(retain_graph=True)
-            # self.scaler.unscale_(agent.actor.optimizer)
-            # self.scaler.step(agent.actor.optimizer)
-            # self.scaler.update()
 
             agent.update_network_parameters()

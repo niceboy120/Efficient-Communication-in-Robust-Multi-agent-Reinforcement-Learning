@@ -41,11 +41,11 @@
 
 # print(asdf)
 
+import pickle
+with open('results/simple_tag/results_edi.pickle', 'rb') as f:
+    data = pickle.load(f)
+    
+data2 = [data[0], data[1], data[2], data[3], data[7], data[8], data[9]]
 
-i=0
-
-while i==0:
-	print('s')
-	continue
-
-print('dsfs')
+with open('results/simple_tag/results_edi.pickle', 'wb') as f:
+    pickle.dump(data2,f)

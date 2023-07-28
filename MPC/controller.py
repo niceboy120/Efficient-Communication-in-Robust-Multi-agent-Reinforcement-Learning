@@ -118,11 +118,7 @@ class SIMPLE_CONTROLLER:
             elif abs(error_angle) > np.pi/4 and abs(error_angle) < np.pi/2:
                 return 0.3, np.sign(error_angle)*3
             else:
-                return 0, np.sign(error_angle)*4            
-                
-            
-         
-    
+                return 0, np.sign(error_angle)*4                      
 
 
 def get_distance(x1, y1, x2, y2):

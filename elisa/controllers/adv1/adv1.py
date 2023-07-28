@@ -1,7 +1,8 @@
 from controller import Robot, DistanceSensor, Motor, Receiver
+import math
 
 # time in [ms] of a simulation step
-TIME_STEP = 32
+TIME_STEP = 64
 
 # create the Robot instance.
 robot = Robot()
@@ -25,6 +26,11 @@ while robot.step(TIME_STEP) != -1:
     if receiver.getQueueLength() > 0:
         wheel_speed = receiver.getFloats()
         receiver.nextPacket()
+    
+    if math.isnan(wheel_speed[0]):
+        wheel_speed[0] = 0
+    if math.isnan(wheel_speed[1]):
+        wheel_speed[1] = 0    
     
     rightMotor.setVelocity(wheel_speed[0])
     leftMotor.setVelocity(wheel_speed[1])

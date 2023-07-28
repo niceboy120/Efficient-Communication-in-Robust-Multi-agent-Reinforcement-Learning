@@ -11,6 +11,35 @@ import datetime
 
 
 class Train:
+    """
+    This is the parent class to this repository. It defines the training or testing object for the full RL algorithm.
+    It supports the lexicographic policy and the toggling of EDI mode. 
+
+    Main functions:
+        - run_episodes(): This runs the episodes of training or testing. 
+            It returns the full episode history: [adversary_return, agent_return, communications] for every episode
+            And the sequence of observations of the last episode of the training/testing.
+        - training()/testing(): These functions are used to set all the necessary parameters and settings:
+            - edi_mode: ('disabled'default()/'train'/'test') determines whether or not we want to use EDI
+            - load: (True(default)/False) determines to load pretraines MADDPG nets
+            - load_adversaries: (True(default)/False) determines to load pretrained MADDPG nets for the adversaries, to make separate training of the agents possible
+            - edi_load: (True(default)/False) determines to load pretrained robustness surrogates networks
+            - render: (True(default testing)/False(default training)) determines if the episode is rendered 
+            - zeta: (float, 0.0 is default) sensitivity parameter for EDI
+            - greedy: (True(default)/False) uses epsilon greedy if True, additive noise if False. For exploration during training.
+            - decreasing_eps: (True(default)/False) determines whether the epsilon decreases over episodes
+            - N_games: (integer, None is default) used to overwite the default number of episodes defined in utils
+            - lexi_mode: (True/False(delfault)) determines whether or not the policy is lexicographically robust or vanilla
+            - robust_actor_loss: (True(default)/False) determines whether to use the actor loss or critic loss for robustness objective
+            - log: (True/False(default)) turning logging to tensorboard on/off
+            - noisy: (True/False(default)) toggles additive noise to the observations
+            - load_alt_location: (None is default) used to specify an alternative directory to load the networks from
+            - noise_mode: (1/2/None(default)) 1 is uniform noise, 2 is Gaussian noise
+            - run: (True(default)/False) whether or not the testing/training functions automatically run episodes
+
+    
+    
+    """
     def __init__(self, scenario, chkpt_dir='/trained_nets/regular/'):
         self.par = HyperParameters()
         self.chkpt_dir = chkpt_dir
@@ -67,6 +96,8 @@ class Train:
         
 
     def run_episodes(self):
+        # Function to run through all the episodes
+
         self.session_setup()
 
         for episode_n in range(self.session_pars.N_games):
@@ -80,6 +111,8 @@ class Train:
         return self.session_wrapup()
             
     def session_setup(self):
+        # Function to set up session parameters
+
         self.print_start_message()            
         
         if self.config.log:
@@ -108,6 +141,8 @@ class Train:
 
 
     def episode_setup(self, i, obs_webots=None):
+        # Function to set up episode parameters
+
         if self.config.lexi_mode and i>self.par.lexi_activate_episode_threshold:
             lexi_mode_active = True
         elif self.config.lexi_mode and self.config.edi_mode!='disabled':
@@ -137,6 +172,8 @@ class Train:
 
     
     def episode_step_pt1(self, obs, last_comm, i, N_games):
+        # Step function, this function is split in two to be able to incorporate webots update
+
         if self.scenario != 'simple_tag_webots':
             if self.config.is_testing and self.config.render:
                 self.env.render()
@@ -159,6 +196,8 @@ class Train:
         return obs_, last_comm, actions, reward, done
 
     def episode_step_pt2(self, obs, obs_, actions, reward, done, i):
+        # Second part of step function
+
         state = obs_list_to_state_vector(obs)
         state_ = obs_list_to_state_vector(obs_)
 
@@ -188,6 +227,8 @@ class Train:
 
 
     def episode_wrapup(self, i):
+        # Function to wrap up the episode, write to the tensorboard logger and print messages
+
         if self.config.edi_mode=='train':
             self.gammanet.learn(self.episode_pars.episode_sequence, self.cooperating_agents_mask)
         
@@ -221,6 +262,8 @@ class Train:
                 self.gammanet.save()
 
     def session_wrapup(self):
+        # Function to wap up a session, save networks, and return its history 
+
         if not self.config.is_testing:
             self.maddpg_agents.save_checkpoint()
 
@@ -233,6 +276,8 @@ class Train:
         return self.session_pars.history, self.episode_pars.episode_sequence
 
     def training(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=False, zeta=0.0, greedy=False, decreasing_eps=True, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None, noise_mode=None, run=True):
+        # Function to set the training parameters
+        
         if edi_mode=='disabled':
             edi_load = False
 
@@ -246,6 +291,8 @@ class Train:
             return self.run_episodes()
 
     def testing(self, edi_mode='disabled', load=True, load_adversaries=True, edi_load=True, render=True, zeta=0.0, greedy=False, decreasing_eps=False, N_games=None, lexi_mode=False, robust_actor_loss=True, log=False, noisy=False, load_alt_location=None, noise_mode=None, run=True):
+        # Function to set the testing parameters
+        
         if edi_mode=='disabled':
             edi_load = False
 
@@ -271,8 +318,6 @@ class Train:
             else:
                 print("Invalid reply, please respond y or n")
 
-
-        # Maybe add if statement if even applicable??
 
         answer = False
         while not answer:
@@ -302,7 +347,8 @@ class Train:
             self.gammanet.load(load_alt_location)
 
 
-    def communication_protocol(self, obs, last_comm, communications, zeta): # ADAPT WHEN MOVING TO WEBOTS!!        
+    def communication_protocol(self, obs, last_comm, communications, zeta): 
+        # Function to call the robustness surrogate and communicate if needed
         agent_knowledge = []
         agent_knowledge_ = []
 
@@ -373,6 +419,8 @@ class Train:
         print(msg)
 
     def replace_obs(self, obs, obs_webots, vel=None): # obs_webots = [adv1x, adv1y, adv2x, adv2y, agentx, agenty]
+        # Function to update observations to webots coordinates
+
         for i, obs_i in enumerate(obs):        
             obs[i][self.pos_mask[0]:self.pos_mask[-1]+1] = [obs_webots[i*2], obs_webots[i*2+1]]
             if vel != None:

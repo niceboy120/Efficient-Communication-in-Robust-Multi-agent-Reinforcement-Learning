@@ -13,9 +13,6 @@ class LexicographicWeights():
         self.eta = [1e-3 * eta for eta in list(reversed(range(1, self.n_objectives+1)))]
         self.vareps = 0.5
 
-        self.coeff = 0.01
-        self.loss_bound = 0.5 # duimzuigerij dit wel...
-
         self.noise = noise
 
     
@@ -48,24 +45,15 @@ class LexicographicWeights():
         disturbed_actions = agent.actor.forward(disturbed.to(device))
 
         loss = 0.5 * (actions.detach()-disturbed_actions).pow(2).mean()
-        
-        # loss = self.coeff*loss     
-        # self.coeff = min([1,self.coeff*1.0001])
-        # loss = T.clip(loss,-self.loss_bound, self.loss_bound)
 
         return loss
     
     def robust_loss_critic(self, states, actions, agent, device, noise_mode=None):
-        # Question.. same actions even though state is disturbed, or actions determined by a disturbed state in the same state????
-
         disturbed = self.noise.nu(states, noise_mode)
 
         agent.critic.eval()
         Q = agent.critic.forward(states.detach(), actions).flatten()
         Q_disturbed = agent.critic.forward(disturbed.to(device).detach(), actions).flatten()
         loss = 0.5 * (Q.detach() - Q_disturbed).pow(2).mean()
-                
-        # loss = self.coeff*loss     
-        # self.coeff = min([1,self.coeff*1.0001])
-        # loss = T.clip(loss,-self.loss_bound, self.loss_bound)
+            
         return loss

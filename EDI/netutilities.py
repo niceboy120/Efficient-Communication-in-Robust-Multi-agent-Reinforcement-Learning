@@ -9,12 +9,23 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 class NetUtilities():
+    """
+    Class that contains the dataset used to train the robustness surrogates network and this network itself.
+
+    Main functions:
+        - get_gamma_from_net: inputs two adversary observations and outputs their gamma
+        - learn: inputs an episode sequence, creates a dataset from this and trains the network
+        - communication: inputs two adversary observations and the zeta threshold and determines if an update needs to be send
+    """
+
+
     def __init__(self, agents, input_dims, scenario, batch_size = 32, chkpt_dir='/trained_nets/regular'):
         self.batch_size = batch_size
         self.dataset = DataSet(agents)
         self.gammanet = GammaNet(beta=0.01, input_dims=input_dims, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='GammaNet', chkpt_dir='EDI'+chkpt_dir, scenario=scenario)
 
-    def get_gamma_from_net(self, x1, x2): # Getting Gamma from the network given two states
+    def get_gamma_from_net(self, x1, x2): 
+        # Getting Gamma from the network given two states
         device = self.gammanet.device
 
         x1 = T.tensor(np.array([x1]), dtype=T.float32).to(device)
@@ -22,8 +33,6 @@ class NetUtilities():
 
         gamma = self.gammanet.forward(x1, x2)
         return gamma.detach().cpu().numpy()[0][0]
-
-    # def check_communication(): # Check, given a gamma, if the state is too much changed compared with last broadcast
 
 
     def learn(self, sequence, cooperating_agents_mask): # learning step for the network?
@@ -71,7 +80,6 @@ class NetUtilities():
     def save(self):
         self.gammanet.save_checkpoint()
 
-        
     def load(self, alternative_location=None):
         self.gammanet.load_checkpoint(alternative_location)
             
