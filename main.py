@@ -34,9 +34,9 @@ if __name__ == '__main__':
             # train_agents_regular.testing()
             # train_agents_LRRL.testing()
 
-            # # Training maddpg agents
-            # history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True, load_alt_location=load_alt_location)
-            # history_LRRL, _ = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=False, noise_mode=1, load_alt_location=load_alt_location)
+            # Training maddpg agents
+            history_regular = train_agents_regular.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=False, log=True, load_alt_location=load_alt_location)
+            history_LRRL, _ = train_agents_LRRL.training(load=False, greedy=True, decreasing_eps=True, lexi_mode=True, log=True, robust_actor_loss=False, noise_mode=1, load_alt_location=load_alt_location)
 
  
             # Testing policies without noise
@@ -63,9 +63,9 @@ if __name__ == '__main__':
                     pickle.dump([test_regular, test_LRRL, test_regular_noise_a, test_LRRL_noise_a, test_regular_noise_b, test_LRRL_noise_b], f)
 
 
-            # # Training gammanet
-            # train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=False)
-            # train_agents_LRRL.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=True)
+            # Training gammanet
+            train_agents_regular.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=False)
+            train_agents_LRRL.testing(edi_mode='train', edi_load=False, render=False, lexi_mode=True)
 
             # Testing zetas for different steps between states
             zeta_diff = [[]]
