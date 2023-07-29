@@ -4,6 +4,9 @@ import numpy as np
 # from scipy.signal import savgol_filter
 plt.rcParams['axes.facecolor'] = 'lightgrey'
 
+
+# ENV = 'simple_tag'
+# ENV = 'simple_tag_mpc'
 ENV = 'simple_tag_webots'
 
 
@@ -132,7 +135,7 @@ ax2.fill_between(data[0], data[1][1:,2]+data[2][1:,2], data[1][1:,2]-data[2][1:,
 ax2.fill_between(data[0], data[4][1:,2]+data[5][1:,2], data[4][1:,2]-data[5][1:,2], color="cornflowerblue", alpha=0.3)
 ax2.plot(data[0], data[1][1:,2], color="blue", marker="o")
 ax2.plot(data[0], data[4][1:,2], color="cornflowerblue", marker=".", linestyle="--")
-ax2.set_ylabel("communications", color="blue", fontsize=14)
+ax2.set_ylabel("Number of communications", color="blue", fontsize=14)
 plt.title("Number of communications and return for different $\zeta_{\mathrm{th}}$ values", fontsize=14)
 plt.show()
 
@@ -170,6 +173,7 @@ plt.plot(data_webots[4][1:,2], data_webots[4][1:,0]-np.interp(data_webots[4][1:,
 plt.xlabel("Number of communications", fontsize=14)
 plt.ylabel("Increase adversary return for LRRL", fontsize=14)
 plt.title("Increase adversary return", fontsize=14)
+plt.xlim([6,45])
 plt.legend()
 plt.grid()
 plt.show()

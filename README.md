@@ -1,4 +1,4 @@
-# Thesis
+# Efficient Communication in Robust Multi-agent Reinforcement Learning
 
 ## Table of Contents
 - [Project Description](#project-description)
@@ -23,7 +23,13 @@
 This is the repository of my graduation project with the topic of reducing the communication in a multi-agent reinforcement learning system by exploiting observational robustness. The accompanying report can be found [here](Thesis.pdf) and contains all the technical details for the interested reader. It combines two ideas by Daniel Jarne Ornia, namely increasing the observational robustness in a reinforcement learning system given [here](), and trading observational robustness for reducing communication between agents in a multi-agen reinforcement learning system given [here](). 
 
 ### Report Abstract
+Reinforcement learning, especially deep reinforcement learning, has made many advances in the last decade. Similarly, great strides have been made in multi-agent reinforcement learning. Systems of cooperative autonomous robots are being used increasingly, for which multi-agent reinforcement learning can be used as training method. However, the curse of dimensionality remains a problem for the computational speed of the learning algorithm and the bandwidth of communication channels. This research will focus mainly on reducing the problem of overloading communication channels by trying to reduce the number of communications, since it is usually not necessary for every agent to communicate with every other agent constantly. 
 
+To do this, we use some ideas by Daniel Jarne Ornia. The first is to reduce communications in a multi-agent reinforcement learning system by treating it as an event-triggered control problem. This method uses so-called robustness surrogates as an equivalent to a Lyapunov function to determine if a communication can be skipped without decreasing the performance more than some tolerance. The second is a method to increase the observational robustness of a policy by using lexicographic reinforcement learning. 
+
+We aim to combine these ideas and trade the additional observational robustness for a decrease in communications. We also want to test if the additional observational robustness can help mitigate the sim-to-real gap. We implement this method for the multi-agent deep deterministic policy gradient algorithm and perform tests on a variant of the predator-prey domain in increasingly more realistic simulations. 
+
+Our research shows that the observational robustness obtained by using lexicographic reinforcement learning unfortunately does not help mitigate the sim-to-real gap. The combination of this robust policy and the robustness surrogates method does enable the agents to achieve the same return while communicating less.
 
 ## Environments and Experiments 
 We tested 3 environments in our experiments. For all environments we included a recording of the execution.
