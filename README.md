@@ -39,17 +39,17 @@ We tested 3 environments in our experiments. For all environments we included a 
 ### Environment A
 The first is a slightly adapted version of the simple_tag environment from the [MPE](https://github.com/openai/multiagent-particle-envs) environments. We adapted it so that one of the adversaries is supposed to mirror the movements of the other adversary. 
 
-<video src="simple-tag.mp4" controls title="Title"></video>
+![simple_tag](https://github.com/J-deGooijer/Efficient-Communication-in-Robust-Multi-agent-Reinforcement-Learning/assets/77576716/96982e1d-915e-4f12-a4a6-8371a3dc9e94)
 
 ### Environment B
 The second environment uses the first environment to generate waypoints, and then uses the differential drive dynamics from [here](https://github.com/zainkhan-afk/Differential-Drive-Robot-Navigation) together with a very simple low level controller to determine its control inputs.
 
-<video src="simple-tag-mpc.mp4" controls title="Title"></video>
+![simple_tag_mpc](https://github.com/J-deGooijer/Efficient-Communication-in-Robust-Multi-agent-Reinforcement-Learning/assets/77576716/dfece6df-2a05-443f-a3d7-7573c06ccf2e)
 
 ### Environment C
 The third environment uses the first environment to generate waypoints, and the same low level controller from the second environment, but then puts these control inputs into the [webots simulator](https://cyberbotics.com/) for more realistic robot dynamics. The robot model used in these simulations is the [Elisa-3](https://www.gctronic.com/doc/index.php/Elisa-3) robot by GCtronic.
 
-<video src="simple-tag-webots.mp4" controls title="Title"></video>
+![simple_tag_webots](https://github.com/J-deGooijer/Efficient-Communication-in-Robust-Multi-agent-Reinforcement-Learning/assets/77576716/4e8396dd-462b-4dff-9b80-c8a054b0fbe1)
 
 ## Installation and Running Instructions
 I have developed this code on an Ubuntu 20.04.6 LTS machine, using python 3.8.10 in Visual Studio Code and running from the terminal.  
